@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin · Overview · Nodex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-nav">
+      <div class="admin-brand">
+        <span class="wordmark-dot"></span><span>Nodex</span>
+        <span class="pill pill-admin">Admin</span>
+      </div>
+      <nav class="admin-menu">
+        <a href="admin-overview.html" class="active">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Overview
+        </a>
+        <a href="admin-users.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Users
+        </a>
+        <a href="admin-cleanup.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+          Cleanup
+        </a>
+      </nav>
+      <div class="admin-bottom">
+        <a href="admin-login.html" class="btn btn-ghost" style="width:100%; justify-content:flex-start;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg>
+          Logout
+        </a>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-top">
+        <h1>Overview</h1>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+          <span class="pill pill-admin">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Admin
+          </span>
+          <button class="icon-btn" onclick="toggleTheme()" title="Theme">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="admin-body">
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="label"><span class="accent-dot"></span>Online users</div>
+            <div class="value">14</div>
+            <div class="sub">Live WebSocket connections</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Total users</div>
+            <div class="value">128</div>
+            <div class="sub">+6 this week</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Total messages</div>
+            <div class="value">38,402</div>
+            <div class="sub">Across 312 conversations</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Storage used</div>
+            <div class="value">1.2&nbsp;GB</div>
+            <div class="sub">Chat 800 MB · Share 400 MB</div>
+          </div>
+        </div>
+
+        <div class="section-title">Messages per day · last 7 days</div>
+        <div class="card chart-card">
+          <div class="chart-bars" id="chart"></div>
+          <div style="display:flex;justify-content:space-between; font-size:11px; color:var(--text-3); padding: 28px 4px 0;">
+            <span>Tue 13</span><span>Wed 14</span><span>Thu 15</span><span>Fri 16</span><span>Sat 17</span><span>Sun 18</span><span>Mon 19</span>
+          </div>
+        </div>
+
+        <div class="section-title">Recently created users</div>
+        <div class="table-card">
+          <table class="tbl">
+            <thead><tr><th>Name</th><th>User ID</th><th>Created</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>陈晓 Chen Xiao</td><td class="id">209-715</td><td class="muted">2h ago</td><td><span class="pill pill-active">Active</span></td></tr>
+              <tr><td>Mira Patel</td><td class="id">364-099</td><td class="muted">Yesterday</td><td><span class="pill pill-active">Active</span></td></tr>
+              <tr><td>Sofia Reyes</td><td class="id">744-201</td><td class="muted">2 days ago</td><td><span class="pill pill-active">Active</span></td></tr>
+              <tr><td>Ahmed Karim</td><td class="id">188-330</td><td class="muted">4 days ago</td><td><span class="pill pill-disabled">Disabled</span></td></tr>
+              <tr><td>Liam O'Connor</td><td class="id">317-822</td><td class="muted">1 week ago</td><td><span class="pill pill-active">Active</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="theme.js"></script>
+  <script>
+    const data = [421, 380, 512, 488, 240, 198, 602];
+    const max = Math.max(...data);
+    document.getElementById('chart').innerHTML = data.map(v =>
+      `<div class="chart-bar" style="height:${(v/max)*100}%"><div class="top">${v}</div></div>`
+    ).join('');
+  </script>
+</body>
+</html>

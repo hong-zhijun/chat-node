@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin · Cleanup · Nodex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="chat.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-nav">
+      <div class="admin-brand">
+        <span class="wordmark-dot"></span><span>Nodex</span>
+        <span class="pill pill-admin">Admin</span>
+      </div>
+      <nav class="admin-menu">
+        <a href="admin-overview.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Overview</a>
+        <a href="admin-users.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg> Users</a>
+        <a href="admin-cleanup.html" class="active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg> Cleanup</a>
+      </nav>
+      <div class="admin-bottom">
+        <a href="admin-login.html" class="btn btn-ghost" style="width:100%; justify-content:flex-start;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg>
+          Logout
+        </a>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-top">
+        <h1>Cleanup</h1>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+          <span class="pill pill-admin">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Admin
+          </span>
+          <button class="icon-btn" onclick="toggleTheme()" title="Theme">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="admin-body">
+        <div class="tabs">
+          <button id="tab-messages" class="active" onclick="showTab('messages')">Messages</button>
+          <button id="tab-files" onclick="showTab('files')">Files</button>
+        </div>
+
+        <!-- Messages -->
+        <div id="pane-messages">
+          <div class="form-card">
+            <div class="form-row">
+              <label>Delete messages older than</label>
+              <input class="input" type="date" value="2026-04-19" />
+              <div class="help">Any message with a timestamp before this date will be permanently deleted.</div>
+            </div>
+            <div class="form-row">
+              <label>Filter by user (optional)</label>
+              <select class="input">
+                <option value="">All users</option>
+                <option>陈晓 Chen Xiao (209-715)</option>
+                <option>Mira Patel (364-099)</option>
+                <option>研发 03 (512-487)</option>
+                <option>Ahmed Karim (188-330)</option>
+              </select>
+              <div class="help">Limit deletion to messages sent by a single user.</div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top: 8px;">
+              <button class="btn btn-secondary" id="prev-msg" onclick="previewMessages()">Preview</button>
+              <button class="btn btn-danger" id="confirm-msg" disabled onclick="openConfirm('msg')">Confirm delete</button>
+            </div>
+
+            <div id="preview-msg" class="preview-result" style="display:none">
+              <div class="num">3,182 messages will be deleted.</div>
+              <div class="muted" style="font-size:13px;">From 7 users · 84 conversations · oldest 14 Mar 2025 · newest 18 Apr 2026</div>
+              <details style="margin-top:12px;">
+                <summary style="cursor:pointer; font-size:13px; color: var(--text-2);">View breakdown by user</summary>
+                <table class="tbl" style="margin-top:8px;">
+                  <thead><tr><th>User</th><th style="text-align:right;">Messages</th></tr></thead>
+                  <tbody>
+                    <tr><td>陈晓 Chen Xiao</td><td style="text-align:right;" class="mono">1,204</td></tr>
+                    <tr><td>研发 03</td><td style="text-align:right;" class="mono">812</td></tr>
+                    <tr><td>Mira Patel</td><td style="text-align:right;" class="mono">478</td></tr>
+                    <tr><td>Ahmed Karim</td><td style="text-align:right;" class="mono">344</td></tr>
+                    <tr><td>Sofia Reyes</td><td style="text-align:right;" class="mono">214</td></tr>
+                    <tr><td>Liam O'Connor</td><td style="text-align:right;" class="mono">88</td></tr>
+                    <tr><td>设计组</td><td style="text-align:right;" class="mono">42</td></tr>
+                  </tbody>
+                </table>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <!-- Files -->
+        <div id="pane-files" style="display:none">
+          <div class="form-card">
+            <div class="form-row">
+              <label>Delete files older than</label>
+              <input class="input" type="date" value="2026-03-19" />
+            </div>
+            <div class="form-row">
+              <label>Delete files larger than</label>
+              <div style="display:flex; gap:8px;">
+                <input class="input" type="number" value="20" style="max-width:120px;" />
+                <select class="input" style="max-width:90px;"><option>MB</option><option>KB</option><option>GB</option></select>
+              </div>
+              <div class="help">Optional. Leave blank to ignore size.</div>
+            </div>
+            <div class="form-row">
+              <label>Scope</label>
+              <div class="checkbox-row"><input id="cb-chat" type="checkbox" checked /> <label for="cb-chat">Chat attachments</label></div>
+              <div class="checkbox-row"><input id="cb-share" type="checkbox" checked /> <label for="cb-share">Shared files</label></div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top: 8px;">
+              <button class="btn btn-secondary" onclick="previewFiles()">Preview</button>
+              <button class="btn btn-danger" id="confirm-files" disabled onclick="openConfirm('files')">Confirm delete</button>
+            </div>
+
+            <div id="preview-files" class="preview-result" style="display:none">
+              <div class="num">62 files (348 MB) will be deleted.</div>
+              <div class="muted" style="font-size:13px;">Chat 38 · Shared 24 · oldest 02 Jan 2025</div>
+              <details style="margin-top:12px;">
+                <summary style="cursor:pointer; font-size:13px; color: var(--text-2);">View file list</summary>
+                <table class="tbl" style="margin-top:8px;">
+                  <thead><tr><th>File</th><th>Size</th><th>Uploaded</th></tr></thead>
+                  <tbody>
+                    <tr><td>brand-archive-v1.zip</td><td class="mono">88 MB</td><td class="muted">02 Jan 2025</td></tr>
+                    <tr><td>raw-recording-stand.mov</td><td class="mono">74 MB</td><td class="muted">14 Feb 2025</td></tr>
+                    <tr><td>full-export-march.csv</td><td class="mono">36 MB</td><td class="muted">28 Feb 2025</td></tr>
+                    <tr><td>old-screenshots.zip</td><td class="mono">22 MB</td><td class="muted">10 Mar 2025</td></tr>
+                    <tr><td colspan="3" class="muted" style="text-align:center;">…and 58 more</td></tr>
+                  </tbody>
+                </table>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Confirm modal -->
+  <div id="modal-confirm" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <h3 style="color:var(--danger)">Are you absolutely sure?</h3>
+      <p id="confirm-body">This will permanently delete <strong>3,182 messages</strong>. This action cannot be undone.</p>
+      <div>
+        <label style="font-size:12px; color:var(--text-2);">Type <code>DELETE</code> to confirm</label>
+        <input id="confirm-input" class="input" placeholder="DELETE" style="margin-top:6px;" oninput="onConfirmType()" />
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-danger" id="confirm-final" disabled onclick="closeModal()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="theme.js"></script>
+  <script>
+    function showTab(t) {
+      document.getElementById('pane-messages').style.display = t === 'messages' ? '' : 'none';
+      document.getElementById('pane-files').style.display = t === 'files' ? '' : 'none';
+      document.getElementById('tab-messages').classList.toggle('active', t === 'messages');
+      document.getElementById('tab-files').classList.toggle('active', t === 'files');
+    }
+    function previewMessages() {
+      document.getElementById('preview-msg').style.display = '';
+      document.getElementById('confirm-msg').disabled = false;
+    }
+    function previewFiles() {
+      document.getElementById('preview-files').style.display = '';
+      document.getElementById('confirm-files').disabled = false;
+    }
+    function openConfirm(kind) {
+      const body = document.getElementById('confirm-body');
+      body.innerHTML = kind === 'msg'
+        ? 'This will permanently delete <strong>3,182 messages</strong>. This action cannot be undone.'
+        : 'This will permanently delete <strong>62 files (348 MB)</strong>. This action cannot be undone.';
+      document.getElementById('confirm-input').value = '';
+      document.getElementById('confirm-final').disabled = true;
+      document.getElementById('modal-confirm').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('modal-confirm').style.display = 'none'; }
+    function onConfirmType() {
+      document.getElementById('confirm-final').disabled =
+        document.getElementById('confirm-input').value.trim() !== 'DELETE';
+    }
+    const m = new URLSearchParams(location.search).get('modal');
+    if (m === 'confirm') openConfirm('msg');
+  </script>
+</body>
+</html>

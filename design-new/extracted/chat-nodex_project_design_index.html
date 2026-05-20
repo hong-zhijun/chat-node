@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nodex Chat — Design system</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    .hero {
+      max-width: 1100px; margin: 0 auto; padding: 64px 24px 32px;
+    }
+    .hero h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }
+    .hero p { margin: 0; color: var(--text-2); font-size: 16px; max-width: 640px; line-height: 1.6; }
+    .grid {
+      max-width: 1100px; margin: 0 auto; padding: 16px 24px 64px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;
+    }
+    .nav-card {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      background: var(--bg);
+      color: inherit;
+      transition: all 200ms ease;
+      position: relative; overflow: hidden;
+    }
+    .nav-card:hover { border-color: var(--border-strong); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .nav-card h3 a { color: inherit; text-decoration: none; }
+    .nav-card h3 a::after {
+      content: ''; position: absolute; inset: 0; z-index: 1;
+    }
+    .nav-card .row { position: relative; z-index: 2; }
+    .nav-card .num {
+      position: absolute; top: 16px; right: 18px;
+      font-size: 11px; color: var(--text-3); font-family: ui-monospace, monospace;
+    }
+    .nav-card h3 { margin: 0; font-size: 16px; font-weight: 600; }
+    .nav-card p { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.5; }
+    .nav-card .row {
+      display: flex; gap: 8px; margin-top: 8px;
+    }
+    .nav-card .row a {
+      font-size: 12px; padding: 4px 10px; border-radius: 6px;
+      background: var(--bg-2); color: var(--text-2); text-decoration: none;
+    }
+    .nav-card .row a:hover { background: var(--bg-3); color: var(--text); }
+    .section-label {
+      max-width: 1100px; margin: 24px auto 0; padding: 0 24px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-3);
+    }
+    .swatches { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+    .swatch { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+    .chip { width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--border); }
+    .meta-row {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+      margin-top: 32px;
+    }
+    footer { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; color: var(--text-3); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header style="max-width:1100px;margin:0 auto;padding:24px 24px 0;display:flex;justify-content:space-between;align-items:center;">
+    <div class="wordmark"><span class="wordmark-dot"></span>nodex</div>
+    <button class="btn btn-secondary" onclick="toggleTheme()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <span data-theme-label>Light</span>
+    </button>
+  </header>
+
+  <section class="hero">
+    <h1>Nodex — chat design package</h1>
+    <p>An end-to-end visual prototype for a private 1:1 messaging app: login &amp; admin entry, the main chat experience, file sharing, and the admin console. Each surface has light + dark modes; mobile breakpoints are at 375&nbsp;px.</p>
+    <div class="swatches">
+      <div class="swatch"><span class="chip" style="background:#5B5BD6"></span> Accent · #5B5BD6</div>
+      <div class="swatch"><span class="chip" style="background:#1a1a1a"></span> Ink · #1A1A1A</div>
+      <div class="swatch"><span class="chip" style="background:#f7f7f8"></span> Surface · #F7F7F8</div>
+      <div class="swatch"><span class="chip" style="background:#1f8a5b"></span> Active · #1F8A5B</div>
+      <div class="swatch"><span class="chip" style="background:#d4373b"></span> Danger · #D4373B</div>
+    </div>
+  </section>
+
+  <div class="section-label">Auth</div>
+  <div class="grid">
+    <div class="nav-card"><span class="num">01</span>
+      <h3><a href="login.html">User login</a></h3>
+      <p>Centered single-input login key flow with visibility toggle and admin-login footer link.</p>
+      <div class="row"><a href="login.html?theme=light">Light</a><a href="login.html?theme=dark">Dark</a></div>
+    </div>
+    <div class="nav-card"><span class="num">02</span>
+      <h3><a href="admin-login.html">Admin login</a></h3>
+      <p>Same shell as user login with shield mark, distinct copy, and back-to-user link.</p>
+      <div class="row"><a href="admin-login.html?theme=light">Light</a><a href="admin-login.html?theme=dark">Dark</a></div>
+    </div>
+  </div>
+
+  <div class="section-label">Chat</div>
+  <div class="grid">
+    <div class="nav-card"><span class="num">03</span>
+      <h3><a href="chat.html">Main chat — interactive</a></h3>
+      <p>Live React prototype: 260&nbsp;px sidebar, conversation switching, message send, typing indicator, recall menu, connection state.</p>
+      <div class="row"><a href="chat.html?theme=light">Light</a><a href="chat.html?theme=dark">Dark</a><a href="chat.html?state=disconnected">Disconnected</a></div>
+    </div>
+    <div class="nav-card"><span class="num">04</span>
+      <h3><a href="chat.html?state=empty">Chat — empty state</a></h3>
+      <p>No conversation selected. Centered wordmark + “Start a new chat” call to action.</p>
+      <div class="row"><a href="chat.html?state=empty&theme=light">Light</a><a href="chat.html?state=empty&theme=dark">Dark</a></div>
+    </div>
+    <div class="nav-card"><span class="num">05</span>
+      <h3><a href="chat-mobile.html">Chat — mobile</a></h3>
+      <p>375 px viewport with slide-in drawer, dvh layout, and condensed status indicator.</p>
+      <div class="row"><a href="chat-mobile.html?theme=light">Light</a><a href="chat-mobile.html?theme=dark">Dark</a></div>
+    </div>
+    <div class="nav-card"><span class="num">06</span>
+      <h3><a href="image-viewer.html">Image lightbox</a></h3>
+      <p>Full-screen viewer with zoom controls, download, close, and a strip of thumbnails.</p>
+      <div class="row"><a href="image-viewer.html">Open</a></div>
+    </div>
+  </div>
+
+  <div class="section-label">Admin</div>
+  <div class="grid">
+    <div class="nav-card"><span class="num">08</span>
+      <h3><a href="admin-overview.html">Admin — overview</a></h3>
+      <p>Four KPI cards, a 7-day message chart, and a recent users panel.</p>
+      <div class="row"><a href="admin-overview.html?theme=light">Light</a><a href="admin-overview.html?theme=dark">Dark</a></div>
+    </div>
+    <div class="nav-card"><span class="num">09</span>
+      <h3><a href="admin-users.html">Admin — users</a></h3>
+      <p>User table with masked keys, status, actions, and Create / Reset / Delete modals.</p>
+      <div class="row"><a href="admin-users.html?theme=light">Light</a><a href="admin-users.html?theme=dark">Dark</a><a href="admin-users.html?modal=create">Create modal</a></div>
+    </div>
+    <div class="nav-card"><span class="num">10</span>
+      <h3><a href="admin-cleanup.html">Admin — cleanup</a></h3>
+      <p>Messages / Files cleanup with preview state and a typed-confirmation destructive modal.</p>
+      <div class="row"><a href="admin-cleanup.html?theme=light">Light</a><a href="admin-cleanup.html?theme=dark">Dark</a><a href="admin-cleanup.html?modal=confirm">Confirm</a></div>
+    </div>
+  </div>
+
+  <footer>
+    Nodex is an original prototype. Heroicons-inspired stroke iconography drawn inline · Inter via Google Fonts.
+  </footer>
+
+  <script src="theme.js"></script>
+</body>
+</html>

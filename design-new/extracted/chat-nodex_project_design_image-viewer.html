@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nodex · Image viewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    body { background: rgba(0,0,0,0.92); color: #fff; }
+    .lb {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+    }
+    .lb-top {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 20px;
+    }
+    .lb-name { font-size: 14px; color: rgba(255,255,255,0.85); }
+    .lb-actions { display: flex; gap: 8px; }
+    .lb-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 200ms ease;
+    }
+    .lb-btn:hover { background: rgba(255,255,255,0.16); }
+    .lb-image-wrap {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 0 24px;
+    }
+    .lb-image {
+      max-width: 95vw; max-height: 80vh; border-radius: 8px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    }
+    .lb-bottom { padding: 16px 20px; display: flex; justify-content: center; }
+    .zoom-bar {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      padding: 4px;
+    }
+    .zoom-bar button {
+      width: 32px; height: 32px; border-radius: 999px;
+      background: transparent; border: none; color: #fff; cursor: pointer;
+    }
+    .zoom-bar button:hover { background: rgba(255,255,255,0.12); }
+    .zoom-bar .pct { padding: 0 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .thumbs {
+      display: flex; gap: 8px; justify-content: center; padding: 12px 16px 20px;
+    }
+    .thumb {
+      width: 56px; height: 56px; border-radius: 8px;
+      border: 2px solid transparent;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .thumb.active { border-color: #7a7aff; }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+</head>
+<body>
+  <div class="lb">
+    <div class="lb-top">
+      <div>
+        <div class="lb-name mono">screenshot-2026-05-19.png</div>
+        <div style="font-size:11px; color:rgba(255,255,255,0.5)">1 of 3 · 1280 × 720 · 184&nbsp;KB</div>
+      </div>
+      <div class="lb-actions">
+        <button class="lb-btn" title="Download">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>
+        </button>
+        <a class="lb-btn" href="chat.html" title="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="lb-image-wrap">
+      <img class="lb-image" id="img" alt="" />
+    </div>
+
+    <div class="lb-bottom">
+      <div class="zoom-bar">
+        <button onclick="zoom(-1)" title="Zoom out">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 12h12"/></svg>
+        </button>
+        <span class="pct mono" id="pct">100%</span>
+        <button onclick="zoom(1)" title="Zoom in">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>
+        </button>
+        <span style="width:1px; height:18px; background:rgba(255,255,255,0.12); margin: 0 4px"></span>
+        <button onclick="zoomReset()" title="Reset">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="thumbs">
+      <div class="thumb active" onclick="pickThumb(this, 0)"><img id="t0" alt=""/></div>
+      <div class="thumb" onclick="pickThumb(this, 1)"><img id="t1" alt=""/></div>
+      <div class="thumb" onclick="pickThumb(this, 2)"><img id="t2" alt=""/></div>
+    </div>
+  </div>
+
+  <script>
+    // Build SVG placeholder data URIs at different sizes/tones
+    function placeholder(w, h, label, tone) {
+      const c = tone === 1 ? ['#3a3a4a','#222230'] : tone === 2 ? ['#444036','#2a2820'] : ['#2a2c40','#1c1d2c'];
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>
+        <defs><pattern id='s' width='12' height='12' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>
+          <rect width='12' height='12' fill='${c[1]}'/><rect width='4' height='12' fill='${c[0]}'/></pattern></defs>
+        <rect width='100%' height='100%' fill='url(#s)'/>
+        <text x='50%' y='50%' text-anchor='middle' dy='6' font-family='ui-monospace, monospace' font-size='18' fill='#cfcfdc'>${label}</text>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+    const sources = [
+      placeholder(1280, 720, 'screenshot.png', 0),
+      placeholder(960, 720, 'sketch.png', 1),
+      placeholder(1024, 640, 'logs.png', 2),
+    ];
+    document.getElementById('img').src = sources[0];
+    document.getElementById('t0').src = sources[0];
+    document.getElementById('t1').src = sources[1];
+    document.getElementById('t2').src = sources[2];
+
+    let zoomLvl = 1;
+    function zoom(d) {
+      zoomLvl = Math.max(0.25, Math.min(4, zoomLvl + d * 0.25));
+      const img = document.getElementById('img');
+      img.style.transform = `scale(${zoomLvl})`;
+      img.style.transition = 'transform 200ms ease';
+      document.getElementById('pct').textContent = Math.round(zoomLvl * 100) + '%';
+    }
+    function zoomReset() { zoomLvl = 1; zoom(0); }
+    function pickThumb(el, i) {
+      document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('img').src = sources[i];
+      zoomReset();
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') location.href = 'chat.html'; });
+  </script>
+</body>
+</html>

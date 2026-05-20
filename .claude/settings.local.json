@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"D:/workspace/chat-node\" && ls \"D:/workspace/chat-node\")",
+      "PowerShell(Get-ChildItem -Recurse -Directory | ForEach-Object { $_.FullName })",
+      "PowerShell(npm install 2>&1)",
+      "mcp__pencil__open_document",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(npm run *)",
+      "Bash(node -e \"require\\('./server/index.js'\\)\")",
+      "Bash(curl -s http://localhost:8881/api/health)",
+      "WebSearch",
+      "Bash(cd /mnt/d/workspace/chat-node/client/chat && npm run build 2>&1)",
+      "Read(//mnt/**)",
+      "Read(//d//**)",
+      "Bash(cmd.exe /c \"cd /d D:\\\\workspace\\\\chat-node\\\\client\\\\chat && npm run build\")",
+      "Bash(Get-ChildItem -Path . -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)",
+      "Bash(ConvertTo-Json)",
+      "Bash(node -e \"require\\('./server/db.js'\\); require\\('./server/services/barkService.js'\\); require\\('./server/services/userService.js'\\); require\\('./server/routes/admin.js'\\); console.log\\('OK'\\)\")",
+      "Bash(pm2 list *)",
+      "Bash(netstat -ano)",
+      "Bash(tasklist)"
+    ]
+  }
+}

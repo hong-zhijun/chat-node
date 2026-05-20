@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in · Nodex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    .page { min-height: 100vh; display: flex; flex-direction: column; }
+    .top-spacer { flex: 0 0 18vh; }
+    .wrap { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 0 16px; }
+    .auth-card { width: 100%; max-width: 400px; padding: 32px; }
+    .auth-card h1 { font-size: 24px; font-weight: 600; margin: 16px 0 6px; letter-spacing: -0.01em; }
+    .auth-card .sub { font-size: 14px; color: var(--text-2); margin: 0 0 24px; }
+    .field { position: relative; margin-bottom: 8px; }
+    .field input { padding-right: 40px; }
+    .eye {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+      border: none; background: transparent; color: var(--text-2); cursor: pointer; border-radius: 6px;
+    }
+    .eye:hover { color: var(--text); background: var(--bg-2); }
+    .err {
+      min-height: 18px; font-size: 12px; color: var(--danger);
+      margin: 4px 0 12px; padding-left: 2px;
+    }
+    .err.empty { visibility: hidden; }
+    .alt {
+      text-align: center; margin-top: 24px; font-size: 13px; color: var(--text-2);
+    }
+    .alt a { color: var(--text-2); text-decoration: none; }
+    .alt a:hover { color: var(--accent); }
+    .legal { text-align: center; padding: 24px; color: var(--text-3); font-size: 11px; }
+    .shield-mark {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: var(--accent-soft); color: var(--accent);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .brand-row { display: flex; align-items: center; gap: 10px; }
+    .brand-row .wordmark { font-size: 20px; }
+    .keycap { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
+      padding: 2px 6px; border: 1px solid var(--border); border-radius: 4px; color: var(--text-2); background: var(--bg-2); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="top-spacer"></div>
+    <main class="wrap">
+      <div class="card auth-card" id="card">
+        <div class="brand-row">
+          <span class="wordmark"><span class="wordmark-dot"></span>nodex</span>
+        </div>
+        <h1>Welcome back</h1>
+        <p class="sub">Enter your login key to continue.</p>
+
+        <form onsubmit="event.preventDefault(); submitForm();">
+          <div class="field">
+            <input id="key" class="input" type="password" placeholder="Login Key" autocomplete="off" />
+            <button type="button" class="eye" onclick="toggleVisibility()" aria-label="Toggle visibility">
+              <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div id="err" class="err empty">Invalid login key. Please try again.</div>
+          <button class="btn btn-primary btn-block" type="submit">Continue</button>
+        </form>
+
+        <div class="alt">
+          <a href="admin-login.html">Admin login →</a>
+        </div>
+      </div>
+    </main>
+    <div class="legal">© 2026 Nodex · A private chat workspace</div>
+  </div>
+
+  <button class="theme-fab" onclick="toggleTheme()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    <span data-theme-label>Light</span>
+  </button>
+
+  <script src="theme.js"></script>
+  <script>
+    function toggleVisibility() {
+      const inp = document.getElementById('key');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+    function submitForm() {
+      const v = document.getElementById('key').value.trim();
+      const err = document.getElementById('err');
+      if (!v || v.length < 4) {
+        err.classList.remove('empty');
+        return;
+      }
+      err.classList.add('empty');
+      location.href = 'chat.html';
+    }
+    // Show error variant if requested
+    if (new URLSearchParams(location.search).get('error')) {
+      document.getElementById('err').classList.remove('empty');
+    }
+  </script>
+</body>
+</html>
