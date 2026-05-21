@@ -7,7 +7,7 @@ WORKDIR /build
 
 # 先复制 package 文件，利用 Docker 层缓存
 COPY client/chat/package*.json ./
-RUN npm ci --prefer-offline
+RUN npm ci --registry=https://registry.npmmirror.com
 
 COPY client/chat/ ./
 RUN npm run build
@@ -23,9 +23,10 @@ WORKDIR /app
 # 将"安装工具 → npm ci → 删除工具"合并在同一 RUN 层，
 # 确保编译工具不进入最终镜像的文件系统。
 COPY package*.json ./
-RUN apt-get update \
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources \
+ && apt-get update \
  && apt-get install -y --no-install-recommends python3 make g++ \
- && npm ci --omit=dev --prefer-offline \
+ && npm ci --omit=dev --registry=https://registry.npmmirror.com \
  && apt-get purge -y --auto-remove python3 make g++ \
  && rm -rf /var/lib/apt/lists/* /root/.npm /tmp/*
 
