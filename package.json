@@ -7,13 +7,14 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
-    "build:client": "echo \"TODO: build client SPAs\" && exit 0"
+    "build:client": "cd client/chat && npm ci && npm run build"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
     "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",

@@ -1,0 +1,30 @@
+# 依赖（镜像内重新安装）
+node_modules/
+client/chat/node_modules/
+
+# 前端构建产物（在 Stage 1 内构建，不从宿主机复制）
+client/chat/dist/
+
+# 运行时数据（通过 volume 挂载，不进镜像）
+data/
+
+# 版本控制
+.git/
+.gitignore
+
+# 环境变量（敏感信息不进镜像）
+.env
+.env.*
+
+# 开发 / 调试
+*.log
+docs/
+scripts/
+
+# Nginx（配置和证书不进镜像）
+nginx/
+
+# Docker 自身
+Dockerfile*
+docker-compose*.yml
+.dockerignore

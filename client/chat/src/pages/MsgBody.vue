@@ -75,7 +75,7 @@ const imgSkeletonStyle = computed(() => {
   const w = content.value.width
   const h = content.value.height
   if (w && h) {
-    const maxW = 240, maxH = 320
+    const maxW = 120, maxH = 160
     let sw = Math.min(w, maxW)
     let sh = (sw / w) * h
     if (sh > maxH) { sh = maxH; sw = (sh / h) * w }
