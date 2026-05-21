@@ -29,6 +29,7 @@ export const api = {
   login:   (loginKey, deviceLabel) => req('POST', '/api/auth/login', { body: { loginKey, deviceLabel }, token: '' }),
   logout:  () => req('POST', '/api/auth/logout'),
   me:      () => req('GET',  '/api/auth/me'),
+  updateSettings: (data) => req('PATCH', '/api/auth/settings', { body: data }),
 
   // Admin
   adminLogin: (adminKey) => req('POST', '/api/admin/login', { body: { adminKey }, token: '' }),

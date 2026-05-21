@@ -41,7 +41,12 @@ router.post('/login', (req, res) => {
     ok: true,
     data: {
       token,
-      user: { userId: user.user_id, name: user.name }
+      user: {
+        userId: user.user_id,
+        name: user.name,
+        notifyBlink: user.notify_blink ?? 1,
+        notifyUnread: user.notify_unread ?? 1
+      }
     }
   });
 });
@@ -65,7 +70,25 @@ router.get('/me', requireUser, (req, res) => {
       .status(404)
       .json({ ok: false, error: { code: 'user_not_found', message: 'User not found' } });
   }
-  res.json({ ok: true, data: { userId: u.user_id, name: u.name } });
+  res.json({
+    ok: true,
+    data: {
+      userId: u.user_id,
+      name: u.name,
+      notifyBlink: u.notify_blink ?? 1,
+      notifyUnread: u.notify_unread ?? 1
+    }
+  });
+});
+
+// PATCH /api/auth/settings  body: { notifyBlink?, notifyUnread? }
+router.patch('/settings', requireUser, (req, res) => {
+  const { notifyBlink, notifyUnread } = req.body || {};
+  userService.updateMySettings(req.auth.userId, {
+    notifyBlink: notifyBlink === 0 || notifyBlink === 1 ? notifyBlink : undefined,
+    notifyUnread: notifyUnread === 0 || notifyUnread === 1 ? notifyUnread : undefined
+  });
+  res.json({ ok: true, data: { notifyBlink, notifyUnread } });
 });
 
 module.exports = router;

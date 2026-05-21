@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { api } from '@/api/index.js'
-const uuidv4 = () => crypto.randomUUID()
+const uuidv4 = () =>
+  typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = crypto.getRandomValues(new Uint8Array(1))[0] % 16 | 0
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
+      })
 import { useWsStore } from './ws.js'
 
 const LAST_ID_KEY = 'nodex-last-msg-id'
@@ -102,10 +108,13 @@ export const useChatStore = defineStore('chat', () => {
       loadConversations()
     } else {
       _updateConvPreview(peerId, m)
-      if (peerId === activePeerId.value && m.fromUserId !== selfUserId()) {
-        markRead(peerId)
-      } else if (peerId !== activePeerId.value) {
-        existingConv.unread = (existingConv.unread || 0) + 1
+      if (m.fromUserId !== selfUserId()) {
+        // 只有对话激活且标签页可见才立即标为已读，否则累积 unread
+        if (peerId === activePeerId.value && !document.hidden) {
+          markRead(peerId)
+        } else {
+          existingConv.unread = (existingConv.unread || 0) + 1
+        }
       }
     }
   }
@@ -230,8 +239,12 @@ export const useChatStore = defineStore('chat', () => {
     if (activePeerId.value === peerId) activePeerId.value = null
   }
 
+  const totalUnread = computed(() =>
+    conversations.value.reduce((sum, c) => sum + (c.unread || 0), 0)
+  )
+
   return {
-    conversations, messages, activePeerId,
+    conversations, messages, activePeerId, totalUnread,
     loadConversations, loadMessages, sendText, sendImage, sendFile,
     recallMessage, markRead, setActive, hideConversation, selfUserId
   }

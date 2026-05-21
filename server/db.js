@@ -112,6 +112,12 @@ function runMigrations() {
   if (!cols.includes('bark_key')) {
     db.exec('ALTER TABLE users ADD COLUMN bark_key TEXT');
   }
+  if (!cols.includes('notify_blink')) {
+    db.exec('ALTER TABLE users ADD COLUMN notify_blink INTEGER NOT NULL DEFAULT 1');
+  }
+  if (!cols.includes('notify_unread')) {
+    db.exec('ALTER TABLE users ADD COLUMN notify_unread INTEGER NOT NULL DEFAULT 1');
+  }
 }
 
 module.exports = { initDb, getDb };

@@ -26,6 +26,13 @@ export const useAuthStore = defineStore('auth', () => {
     return data
   }
 
+  async function updateSettings({ notifyBlink, notifyUnread }) {
+    await api.updateSettings({ notifyBlink, notifyUnread })
+    const updated = { ...user.value, notifyBlink, notifyUnread }
+    user.value = updated
+    localStorage.setItem('nodex-user', JSON.stringify(updated))
+  }
+
   function logout() {
     api.logout().catch(() => {})
     token.value = ''
@@ -43,5 +50,5 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoggedIn = () => !!token.value && !!user.value
   const isAdminLoggedIn = () => !!adminToken.value
 
-  return { token, user, adminToken, login, logout, setAdmin, adminLogout, isLoggedIn, isAdminLoggedIn }
+  return { token, user, adminToken, login, logout, updateSettings, setAdmin, adminLogout, isLoggedIn, isAdminLoggedIn }
 })

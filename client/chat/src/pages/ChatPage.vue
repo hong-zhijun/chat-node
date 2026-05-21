@@ -102,6 +102,12 @@
               </button>
             </div>
           </div>
+          <button class="icon-btn" style="width:28px;height:28px;flex-shrink:0;margin-left:2px" title="设置" @click="openSettings">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
         </div>
       </div>
     </aside>
@@ -283,6 +289,7 @@
             v-model="draft"
             @keydown="onKeyDown"
             @input="autosize"
+            @paste="onPaste"
           ></textarea>
           <button
             class="send-btn"
@@ -345,6 +352,46 @@
         <div class="actions">
           <button class="btn btn-ghost" @click="recallConfirmId = null">取消</button>
           <button class="btn btn-danger" @click="confirmRecall">确认撤回</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Settings modal ═══ -->
+    <div v-if="showSettings" class="modal-overlay" @click.self="showSettings = false">
+      <div class="modal">
+        <h3>通知设置</h3>
+        <div class="setting-row">
+          <div class="setting-text">
+            <div class="setting-label">标签页闪烁</div>
+            <div class="setting-desc">有新消息时标签页标题交替闪烁</div>
+          </div>
+          <button
+            class="toggle-btn"
+            :class="{ 'toggle-on': settingsBlink }"
+            @click="settingsBlink = !settingsBlink"
+            :aria-checked="settingsBlink"
+            role="switch"
+          ></button>
+        </div>
+        <div class="setting-row">
+          <div class="setting-text">
+            <div class="setting-label">未读消息数</div>
+            <div class="setting-desc">在标签页标题显示未读消息数量</div>
+          </div>
+          <button
+            class="toggle-btn"
+            :class="{ 'toggle-on': settingsUnread }"
+            @click="settingsUnread = !settingsUnread"
+            :aria-checked="settingsUnread"
+            role="switch"
+          ></button>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" @click="showSettings = false">取消</button>
+          <button class="btn btn-primary" :disabled="settingsSaving" @click="saveSettings">
+            <span v-if="settingsSaving" class="spinner" style="width:14px;height:14px;border-width:2px"></span>
+            <span v-else>保存</span>
+          </button>
         </div>
       </div>
     </div>
@@ -416,6 +463,10 @@ const displayTitlePeerId = ref('')
 const peerSelectRef = ref(null)
 const showNewChat  = ref(false)
 const showFiles    = ref(false)
+const showSettings = ref(false)
+const settingsBlink  = ref(true)
+const settingsUnread = ref(true)
+const settingsSaving = ref(false)
 const recallConfirmId = ref(null)  // 等待二次确认的消息 id
 const showEmojiPicker = ref(false)
 const emojiWrapRef    = ref(null)
@@ -447,6 +498,7 @@ const currentPeer = computed(() => {
 const currentMessages = computed(() =>
   chatStore.messages[chatStore.activePeerId] || []
 )
+
 
 // Group conversations by recency (Today / Yesterday / Previous 7 days / Previous 30 days / Older)
 const groupedConvs = computed(() => {
@@ -538,6 +590,46 @@ watch(() => currentMessages.value.length, async () => {
   }
 })
 
+// ── Title blink ───────────────────────────────────────────────────────
+let _blinkTimer = null
+let _blinkFlip   = false
+
+function _startBlink(count) {
+  const showCount = auth.user?.notifyUnread !== 0
+  if (auth.user?.notifyBlink === 0) {
+    // 不闪烁，但仍静态更新标题
+    document.title = showCount ? `(${count}) Nodex` : 'Nodex'
+    return
+  }
+  if (_blinkTimer) return
+  _blinkFlip = true
+  _blinkTimer = setInterval(() => {
+    _blinkFlip = !_blinkFlip
+    const label = showCount ? `(${count}) 新消息 · Nodex` : '新消息 · Nodex'
+    document.title = _blinkFlip ? label : 'Nodex'
+  }, 1000)
+}
+
+function _stopBlink() {
+  if (_blinkTimer) { clearInterval(_blinkTimer); _blinkTimer = null }
+}
+
+// Tab title blink
+watch(() => chatStore.totalUnread, (n) => {
+  const showCount = auth.user?.notifyUnread !== 0
+  if (n > 0) {
+    if (document.hidden) {
+      _startBlink(n)
+    } else {
+      _stopBlink()
+      document.title = showCount ? `(${n}) Nodex` : 'Nodex'
+    }
+  } else {
+    _stopBlink()
+    document.title = 'Nodex'
+  }
+}, { immediate: true })
+
 // ── Send ──────────────────────────────────────────────────────────────
 function send() {
   if (!draft.value.trim() || !chatStore.activePeerId) return
@@ -567,6 +659,23 @@ async function onFileSelect(e) {
     nextTick(scrollToBottom)
   } catch (err) {
     console.error('Upload failed', err)
+  }
+}
+
+// ── Paste image ───────────────────────────────────────────────────────
+async function onPaste(e) {
+  if (!chatStore.activePeerId) return
+  const items = Array.from(e.clipboardData?.items || [])
+  const imageItem = items.find(item => item.type.startsWith('image/'))
+  if (!imageItem) return
+  e.preventDefault()
+  const file = imageItem.getAsFile()
+  if (!file) return
+  try {
+    await chatStore.sendImage(chatStore.activePeerId, file)
+    nextTick(scrollToBottom)
+  } catch (err) {
+    console.error('Paste image failed', err)
   }
 }
 
@@ -621,18 +730,22 @@ async function startNewChat() {
   newChatError.value   = ''
   newChatLoading.value = true
   try {
-    await api.findUser(userId)
+    const userInfo = await api.findUser(userId)
     closeNewChat()
     // If already have a conversation, just switch to it
     const existing = chatStore.conversations.find(c => c.peer.userId === userId)
     if (existing) {
       selectConv(userId)
     } else {
-      // Inject a lightweight placeholder so the sidebar shows it immediately
-      chatStore.conversations.unshift({ peer: { userId, name: userId }, lastMessageAt: null, preview: '', unread: 0 })
-      selectConv(userId)
-      // Reload to get real user name from server
-      chatStore.loadConversations()
+      // Inject placeholder with real user name
+      chatStore.conversations.unshift({
+        peer: { userId, name: userInfo.name || userId },
+        lastMessageAt: Date.now(), preview: '你好！', unread: 0
+      })
+      await selectConv(userId)
+      // Auto-send greeting — this also creates the conversation record on the server,
+      // so the dropdown entry persists after the next loadConversations
+      chatStore.sendText(userId, '你好！')
     }
   } catch (e) {
     newChatError.value = e.status === 404 ? 'User not found.' : 'Error looking up user. Try again.'
@@ -647,12 +760,42 @@ function exitSleep()  { sleepMode.value = false }
 
 function onVisibilityChange() {
   if (document.hidden) {
-    // 离开标签页，5 分钟后自动进入睡眠
     sleepTimer = setTimeout(() => { sleepMode.value = true }, 5 * 60 * 1000)
+    if (chatStore.totalUnread > 0) _startBlink(chatStore.totalUnread)
   } else {
-    // 回到标签页，若还没触发则取消
     clearTimeout(sleepTimer)
     sleepTimer = null
+    _stopBlink()
+    const n = chatStore.totalUnread
+    const showCount = auth.user?.notifyUnread !== 0
+    document.title = (n > 0 && showCount) ? `(${n}) Nodex` : 'Nodex'
+    if (chatStore.activePeerId) chatStore.markRead(chatStore.activePeerId)
+  }
+}
+
+// ── Settings ──────────────────────────────────────────────────────────
+function openSettings() {
+  settingsBlink.value  = auth.user?.notifyBlink  !== 0
+  settingsUnread.value = auth.user?.notifyUnread !== 0
+  showSettings.value   = true
+}
+
+async function saveSettings() {
+  settingsSaving.value = true
+  try {
+    await auth.updateSettings({
+      notifyBlink:  settingsBlink.value  ? 1 : 0,
+      notifyUnread: settingsUnread.value ? 1 : 0
+    })
+    showSettings.value = false
+    // 立即更新标题
+    const n = chatStore.totalUnread
+    if (n > 0 && settingsUnread.value) document.title = `(${n}) Nodex`
+    else document.title = 'Nodex'
+  } catch (e) {
+    console.error('Save settings failed', e)
+  } finally {
+    settingsSaving.value = false
   }
 }
 
@@ -693,6 +836,7 @@ function onKeyEsc(e) {
     recallConfirmId.value  = null
     showEmojiPicker.value  = false
     viewerSrc.value        = null
+    showSettings.value     = false
   }
 }
 
@@ -721,5 +865,7 @@ onUnmounted(() => {
   document.removeEventListener('keydown', onKeyEsc)
   document.removeEventListener('visibilitychange', onVisibilityChange)
   clearTimeout(sleepTimer)
+  _stopBlink()
+  document.title = 'Nodex'
 })
 </script>

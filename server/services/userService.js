@@ -5,13 +5,13 @@ const USER_ID_RE = /^[0-9]{6}$/;
 
 function findByLoginKey(loginKey) {
   return getDb()
-    .prepare('SELECT id, user_id, name, status FROM users WHERE login_key = ?')
+    .prepare('SELECT id, user_id, name, status, notify_blink, notify_unread FROM users WHERE login_key = ?')
     .get(loginKey);
 }
 
 function findByUserId(userId) {
   return getDb()
-    .prepare('SELECT id, user_id, name, status, created_at FROM users WHERE user_id = ?')
+    .prepare('SELECT id, user_id, name, status, created_at, notify_blink, notify_unread FROM users WHERE user_id = ?')
     .get(userId);
 }
 
@@ -132,6 +132,16 @@ function updateUser(userId, { name, status, regenerateLoginKey, barkKey }) {
   return { userId, loginKey: newLoginKey };
 }
 
+function updateMySettings(userId, { notifyBlink, notifyUnread }) {
+  const sets = [];
+  const params = [];
+  if (notifyBlink === 0 || notifyBlink === 1) { sets.push('notify_blink = ?'); params.push(notifyBlink); }
+  if (notifyUnread === 0 || notifyUnread === 1) { sets.push('notify_unread = ?'); params.push(notifyUnread); }
+  if (sets.length === 0) return;
+  params.push(userId);
+  getDb().prepare(`UPDATE users SET ${sets.join(', ')} WHERE user_id = ?`).run(...params);
+}
+
 function deleteUser(userId) {
   const db = getDb();
   const u = findByUserId(userId);
@@ -153,5 +163,6 @@ module.exports = {
   listUsers,
   createUser,
   updateUser,
+  updateMySettings,
   deleteUser
 };

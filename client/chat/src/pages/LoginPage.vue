@@ -35,9 +35,6 @@
           </button>
         </form>
 
-        <div class="alt">
-          <router-link to="/admin/login">Admin login →</router-link>
-        </div>
       </div>
     </main>
     <div class="legal">© 2026 Nodex · A private chat workspace</div>
