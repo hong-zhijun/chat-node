@@ -401,13 +401,13 @@
     </div>
 
     <!-- ═══ Sleep overlay ═══ -->
-    <div v-if="sleepMode" class="sleep-overlay">
+    <div v-if="sleepMode" class="sleep-overlay" @click="exitSleep">
       <div class="sleep-card">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:rgba(255,255,255,0.6);margin-bottom:16px">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
         <p class="sleep-title">睡眠模式已开启</p>
-        <button class="btn sleep-exit-btn" @click="exitSleep">退出睡眠模式</button>
+        <p class="sleep-hint">点击任意位置退出</p>
       </div>
     </div>
 
