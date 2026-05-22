@@ -85,6 +85,12 @@ export const api = {
   fileUrl:  (fileId) => `${BASE}/api/files/${fileId}?token=${getToken()}`,
   thumbUrl: (fileId) => `${BASE}/api/files/${fileId}/thumbnail?token=${getToken()}`,
 
+  // AI Fillers
+  fillers:      ()        => req('GET',    '/api/fillers'),
+  adminFillers: ()        => req('GET',    '/api/admin/fillers',      { isAdmin: true }),
+  createFiller: (content) => req('POST',   '/api/admin/fillers',      { body: { content }, isAdmin: true }),
+  deleteFiller: (id)      => req('DELETE', `/api/admin/fillers/${id}`, { isAdmin: true }),
+
   // Share
   share: ({ before, limit, q } = {}) => {
     const qs = new URLSearchParams()

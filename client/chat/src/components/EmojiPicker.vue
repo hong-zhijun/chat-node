@@ -21,7 +21,7 @@ onMounted(async () => {
     theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
     previewPosition: 'none',
     skinTonePosition: 'none',
-    perLine: 9,
+    perLine: window.innerWidth < 480 ? 7 : 9,
     set: 'native'
   })
 })

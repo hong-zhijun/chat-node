@@ -123,4 +123,38 @@ router.post('/cleanup/files/execute', requireAdmin, (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ── AI Filler 文案管理 ────────────────────────────────────────────────────
+
+// GET /api/admin/fillers
+router.get('/fillers', requireAdmin, (req, res) => {
+  const rows = require('../db').getDb()
+    .prepare('SELECT id, content, created_at FROM ai_fillers ORDER BY id ASC')
+    .all();
+  res.json({ ok: true, data: rows });
+});
+
+// POST /api/admin/fillers  body: { content }
+router.post('/fillers', requireAdmin, (req, res) => {
+  const { content } = req.body || {};
+  if (!content || typeof content !== 'string' || !content.trim()) {
+    return res.status(400).json({ ok: false, error: { code: 'invalid_request', message: 'content required' } });
+  }
+  const now = Date.now();
+  const result = require('../db').getDb()
+    .prepare('INSERT INTO ai_fillers (content, created_at) VALUES (?, ?)')
+    .run(content.trim(), now);
+  res.json({ ok: true, data: { id: result.lastInsertRowid, content: content.trim(), created_at: now } });
+});
+
+// DELETE /api/admin/fillers/:id
+router.delete('/fillers/:id', requireAdmin, (req, res) => {
+  const result = require('../db').getDb()
+    .prepare('DELETE FROM ai_fillers WHERE id = ?')
+    .run(req.params.id);
+  if (result.changes === 0) {
+    return res.status(404).json({ ok: false, error: { code: 'not_found', message: 'Filler not found' } });
+  }
+  res.json({ ok: true, data: { deleted: true } });
+});
+
 module.exports = router;

@@ -10,7 +10,8 @@ const routes = [
       { path: '',        component: () => import('./pages/admin/OverviewPage.vue') },
       { path: 'users',   component: () => import('./pages/admin/UsersPage.vue') },
       { path: 'cleanup', component: () => import('./pages/admin/CleanupPage.vue') },
-      { path: 'config',  component: () => import('./pages/admin/ConfigPage.vue') },
+      { path: 'config',   component: () => import('./pages/admin/ConfigPage.vue') },
+      { path: 'fillers',  component: () => import('./pages/admin/FillersPage.vue') },
     ]
   },
   { path: '/',              component: () => import('./pages/ChatPage.vue') },

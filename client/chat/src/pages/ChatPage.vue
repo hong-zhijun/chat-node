@@ -202,6 +202,10 @@
               <div v-if="!isSelf(m)" class="peer-msg-wrap">
                 <div v-if="!isCompact(m, i)" class="peer-name-label">nodex</div>
                 <MsgBody :m="m" @view-image="viewerSrc = $event" />
+                <template v-if="msgFiller(m)">
+                  <div class="filler-sep"></div>
+                  <div class="filler-body">{{ msgFiller(m) }}</div>
+                </template>
                 <div class="msg-meta">
                   <span
                     class="msg-time"
@@ -455,6 +459,7 @@ const chatStore = useChatStore()
 const wsStore = useWsStore()
 
 // ── UI state ──────────────────────────────────────────────────────────
+const fillers      = ref([])
 const drawerOpen   = ref(false)
 const peerMenuOpen = ref(false)
 // 侧边栏"伪装"标题：点击左侧列表仅改变顶栏显示名，不切换实际会话
@@ -534,6 +539,12 @@ const groupedConvs = computed(() => {
 
 // ── Message helpers ───────────────────────────────────────────────────
 function isSelf(m) { return m.fromUserId === chatStore.selfUserId() }
+
+// 确定性取 filler：同一条消息每次刷新显示同一段文字
+function msgFiller(m) {
+  if (!fillers.value.length || !m.id || isSelf(m)) return null
+  return fillers.value[m.id % fillers.value.length]?.content ?? null
+}
 function isCompact(m, i) {
   const prev = currentMessages.value[i - 1]
   return !!(prev && prev.fromUserId === m.fromUserId && !prev.recalled && !m.recalled)
@@ -845,6 +856,9 @@ onMounted(async () => {
   document.addEventListener('click', onDocClick)
   document.addEventListener('keydown', onKeyEsc)
   document.addEventListener('visibilitychange', onVisibilityChange)
+  // 拉取 filler 文案列表
+  api.fillers().then(data => { fillers.value = data }).catch(() => {})
+
   // Connect WebSocket if not already
   if (auth.isLoggedIn() && wsStore.state !== 'connected' && wsStore.state !== 'connecting') {
     wsStore.connect(auth.token)

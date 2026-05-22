@@ -103,6 +103,12 @@ function createTables() {
       value TEXT,
       updated_at INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS ai_fillers (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      content    TEXT    NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+    );
   `);
 }
 
