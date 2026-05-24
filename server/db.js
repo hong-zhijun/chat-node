@@ -124,6 +124,14 @@ function runMigrations() {
   if (!cols.includes('notify_unread')) {
     db.exec('ALTER TABLE users ADD COLUMN notify_unread INTEGER NOT NULL DEFAULT 1');
   }
+  if (!cols.includes('show_filler')) {
+    db.exec('ALTER TABLE users ADD COLUMN show_filler INTEGER NOT NULL DEFAULT 1');
+  }
+
+  const msgCols = db.pragma('table_info(messages)').map((c) => c.name);
+  if (!msgCols.includes('reply_to_id')) {
+    db.exec('ALTER TABLE messages ADD COLUMN reply_to_id INTEGER');
+  }
 }
 
 module.exports = { initDb, getDb };

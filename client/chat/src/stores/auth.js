@@ -26,9 +26,9 @@ export const useAuthStore = defineStore('auth', () => {
     return data
   }
 
-  async function updateSettings({ notifyBlink, notifyUnread }) {
-    await api.updateSettings({ notifyBlink, notifyUnread })
-    const updated = { ...user.value, notifyBlink, notifyUnread }
+  async function updateSettings({ notifyBlink, notifyUnread, showFiller }) {
+    await api.updateSettings({ notifyBlink, notifyUnread, showFiller })
+    const updated = { ...user.value, notifyBlink, notifyUnread, showFiller }
     user.value = updated
     localStorage.setItem('nodex-user', JSON.stringify(updated))
   }

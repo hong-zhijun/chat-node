@@ -1,5 +1,4 @@
 const { WebSocketServer } = require('ws');
-const url = require('url');
 const config = require('../config');
 const { verifyToken } = require('./auth');
 const { getDb } = require('./db');
@@ -55,12 +54,12 @@ function attachWebSocketServer(server) {
   const wss = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (req, socket, head) => {
-    const { pathname, query } = url.parse(req.url, true);
-    if (pathname !== '/ws') {
+    const u = new URL(req.url, 'http://localhost');
+    if (u.pathname !== '/ws') {
       socket.destroy();
       return;
     }
-    const token = query.token;
+    const token = u.searchParams.get('token');
     const payload = token && verifyToken(token);
     if (!payload || payload.type !== 'user') {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
@@ -159,7 +158,7 @@ function handleClientMessage(ws, msg) {
 }
 
 function handleSend(ws, msg) {
-  const { clientMsgId, to, msgType, content } = msg;
+  const { clientMsgId, to, msgType, content, replyToId } = msg;
   if (!to || typeof to !== 'string') return sendError(ws, 'invalid_to', 'to is required', { clientMsgId });
   if (to === ws.userId) return sendError(ws, 'invalid_to', 'cannot send to self', { clientMsgId });
   if (!['text', 'image', 'file'].includes(msgType)) {
@@ -202,6 +201,22 @@ function handleSend(ws, msg) {
     if (file.height) content.height = file.height;
   }
 
+  // 校验 replyToId：必须存在且属于当前对话双方；否则降级为普通消息（不报错）
+  let validReplyToId = null;
+  if (replyToId) {
+    const rid = parseInt(replyToId, 10);
+    if (rid) {
+      const r = db
+        .prepare('SELECT from_user_id, to_user_id FROM messages WHERE id = ?')
+        .get(rid);
+      if (r &&
+          ((r.from_user_id === ws.userId && r.to_user_id === to) ||
+           (r.from_user_id === to && r.to_user_id === ws.userId))) {
+        validReplyToId = rid;
+      }
+    }
+  }
+
   // 幂等：clientMsgId 已存在 → 视为重复，回 ack
   if (clientMsgId) {
     const existing = messageService.findByClientMsgId(
@@ -228,7 +243,8 @@ function handleSend(ws, msg) {
       toUserId: to,
       type: msgType,
       content,
-      clientMsgId: clientMsgId || null
+      clientMsgId: clientMsgId || null,
+      replyToId: validReplyToId
     });
   } catch (e) {
     // 并发下 client_msg_id UNIQUE 冲突

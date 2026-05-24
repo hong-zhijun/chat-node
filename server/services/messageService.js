@@ -4,6 +4,37 @@ function pairKey(a, b) {
   return a < b ? [a, b] : [b, a];
 }
 
+function buildReplyPreview(row) {
+  if (!row) return null;
+  let preview = '';
+  if (row.recalled) {
+    preview = '[消息已撤回]';
+  } else if (row.type === 'text') {
+    preview = (row.content || '').slice(0, 80);
+  } else if (row.type === 'image') {
+    preview = '[图片]';
+  } else if (row.type === 'file') {
+    let filename = '';
+    try { filename = (JSON.parse(row.content) || {}).filename || ''; } catch {}
+    preview = filename ? `[文件] ${filename}` : '[文件]';
+  }
+  return {
+    id: row.id,
+    fromUserId: row.from_user_id,
+    type: row.type,
+    preview,
+    recalled: !!row.recalled
+  };
+}
+
+function loadReplyTo(replyToId) {
+  if (!replyToId) return null;
+  const row = getDb()
+    .prepare('SELECT id, from_user_id, type, content, recalled FROM messages WHERE id = ?')
+    .get(replyToId);
+  return buildReplyPreview(row);
+}
+
 function rowToMessage(row) {
   if (!row) return null;
   let content = row.content;
@@ -19,7 +50,8 @@ function rowToMessage(row) {
     clientMsgId: row.client_msg_id,
     createdAt: row.created_at,
     recalled: !!row.recalled,
-    readAt: row.read_at
+    readAt: row.read_at,
+    replyTo: loadReplyTo(row.reply_to_id)
   };
 }
 
@@ -39,7 +71,7 @@ function findById(id) {
   return rowToMessage(getDb().prepare('SELECT * FROM messages WHERE id = ?').get(id));
 }
 
-function insertMessage({ fromUserId, toUserId, type, content, clientMsgId }) {
+function insertMessage({ fromUserId, toUserId, type, content, clientMsgId, replyToId }) {
   const db = getDb();
   const now = Date.now();
   const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
@@ -47,10 +79,10 @@ function insertMessage({ fromUserId, toUserId, type, content, clientMsgId }) {
   const tx = db.transaction(() => {
     const info = db
       .prepare(
-        `INSERT INTO messages (from_user_id, to_user_id, type, content, client_msg_id, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`
+        `INSERT INTO messages (from_user_id, to_user_id, type, content, client_msg_id, created_at, reply_to_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
       )
-      .run(fromUserId, toUserId, type, contentStr, clientMsgId || null, now);
+      .run(fromUserId, toUserId, type, contentStr, clientMsgId || null, now, replyToId || null);
 
     const [a, b] = pairKey(fromUserId, toUserId);
     db.prepare(

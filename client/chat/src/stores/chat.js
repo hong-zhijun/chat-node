@@ -43,10 +43,9 @@ export const useChatStore = defineStore('chat', () => {
     } catch {}
     // 重发待确认消息
     for (const [clientMsgId, p] of Object.entries(pendingMsgs)) {
-      wsStore.send({
-        type: 'send', clientMsgId,
-        to: p.peerId, msgType: p.type, content: p.content
-      })
+      const payload = { type: 'send', clientMsgId, to: p.peerId, msgType: p.type, content: p.content }
+      if (p.replyToId) payload.replyToId = p.replyToId
+      wsStore.send(payload)
     }
     // 刷新会话列表
     await loadConversations()
@@ -77,7 +76,13 @@ export const useChatStore = defineStore('chat', () => {
   function onWsRecall(msg) {
     for (const list of Object.values(messages)) {
       const m = list.find(x => x.id === msg.messageId)
-      if (m) { m.recalled = true; break }
+      if (m) m.recalled = true
+      // 同步更新所有引用该消息的 replyTo
+      for (const x of list) {
+        if (x.replyTo && x.replyTo.id === msg.messageId) {
+          x.replyTo = { ...x.replyTo, recalled: true, preview: '[消息已撤回]' }
+        }
+      }
     }
   }
 
@@ -161,7 +166,7 @@ export const useChatStore = defineStore('chat', () => {
     return list.length === 50 // hasMore
   }
 
-  function sendText(peerId, text) {
+  function sendText(peerId, text, replyTo = null) {
     const clientMsgId = uuidv4()
     const tempId = 'tmp-' + clientMsgId
     const self = selfUserId()
@@ -169,43 +174,50 @@ export const useChatStore = defineStore('chat', () => {
       tempId, clientMsgId,
       fromUserId: self, toUserId: peerId,
       type: 'text', content: text,
-      createdAt: Date.now(), state: 'sending'
+      createdAt: Date.now(), state: 'sending',
+      replyTo: replyTo || null
     }
     if (!messages[peerId]) messages[peerId] = []
     messages[peerId].push(tempMsg)
-    pendingMsgs[clientMsgId] = { peerId, type: 'text', content: text, tempId }
+    pendingMsgs[clientMsgId] = { peerId, type: 'text', content: text, tempId, replyToId: replyTo?.id || null }
 
-    const sent = wsStore.send({ type: 'send', clientMsgId, to: peerId, msgType: 'text', content: text })
+    const payload = { type: 'send', clientMsgId, to: peerId, msgType: 'text', content: text }
+    if (replyTo?.id) payload.replyToId = replyTo.id
+    const sent = wsStore.send(payload)
     if (!sent) {
       tempMsg.state = 'failed'
     }
     _updateConvPreview(peerId, tempMsg)
   }
 
-  async function sendImage(peerId, file) {
+  async function sendImage(peerId, file, replyTo = null) {
     const uploaded = await api.uploadFile(file, 'chat')
     const clientMsgId = uuidv4()
     const tempId = 'tmp-' + clientMsgId
     const content = { fileId: uploaded.fileId, filename: uploaded.filename, size: uploaded.size, mime: uploaded.mime, width: uploaded.width, height: uploaded.height }
     const self = selfUserId()
-    const tempMsg = { tempId, clientMsgId, fromUserId: self, toUserId: peerId, type: 'image', content, createdAt: Date.now(), state: 'sending' }
+    const tempMsg = { tempId, clientMsgId, fromUserId: self, toUserId: peerId, type: 'image', content, createdAt: Date.now(), state: 'sending', replyTo: replyTo || null }
     if (!messages[peerId]) messages[peerId] = []
     messages[peerId].push(tempMsg)
-    pendingMsgs[clientMsgId] = { peerId, type: 'image', content, tempId }
-    wsStore.send({ type: 'send', clientMsgId, to: peerId, msgType: 'image', content })
+    pendingMsgs[clientMsgId] = { peerId, type: 'image', content, tempId, replyToId: replyTo?.id || null }
+    const payload = { type: 'send', clientMsgId, to: peerId, msgType: 'image', content }
+    if (replyTo?.id) payload.replyToId = replyTo.id
+    wsStore.send(payload)
   }
 
-  async function sendFile(peerId, file) {
+  async function sendFile(peerId, file, replyTo = null) {
     const uploaded = await api.uploadFile(file, 'chat')
     const clientMsgId = uuidv4()
     const tempId = 'tmp-' + clientMsgId
     const content = { fileId: uploaded.fileId, filename: uploaded.filename, size: uploaded.size, mime: uploaded.mime }
     const self = selfUserId()
-    const tempMsg = { tempId, clientMsgId, fromUserId: self, toUserId: peerId, type: 'file', content, createdAt: Date.now(), state: 'sending' }
+    const tempMsg = { tempId, clientMsgId, fromUserId: self, toUserId: peerId, type: 'file', content, createdAt: Date.now(), state: 'sending', replyTo: replyTo || null }
     if (!messages[peerId]) messages[peerId] = []
     messages[peerId].push(tempMsg)
-    pendingMsgs[clientMsgId] = { peerId, type: 'file', content, tempId }
-    wsStore.send({ type: 'send', clientMsgId, to: peerId, msgType: 'file', content })
+    pendingMsgs[clientMsgId] = { peerId, type: 'file', content, tempId, replyToId: replyTo?.id || null }
+    const payload = { type: 'send', clientMsgId, to: peerId, msgType: 'file', content }
+    if (replyTo?.id) payload.replyToId = replyTo.id
+    wsStore.send(payload)
   }
 
   async function recallMessage(messageId) {

@@ -1,9 +1,32 @@
 <template>
+  <!-- Inline reply quote (sits above the bubble) -->
+  <div
+    v-if="m.replyTo"
+    class="reply-quote"
+    :class="{ 'reply-recalled': m.replyTo.recalled }"
+  >{{ m.replyTo.preview || '原消息已撤回' }}</div>
+
   <!-- Text message -->
-  <div v-if="m.type === 'text'" class="msg-body">{{ textContent }}</div>
+  <div
+    v-if="m.type === 'text'"
+    class="msg-body"
+    @contextmenu.prevent="$emit('ctx-menu', $event)"
+    @touchstart="$emit('touch-start', $event)"
+    @touchend="$emit('touch-end')"
+    @touchmove="$emit('touch-end')"
+    @touchcancel="$emit('touch-end')"
+  >{{ textContent }}</div>
 
   <!-- Image message -->
-  <div v-else-if="m.type === 'image'" class="img-wrap">
+  <div
+    v-else-if="m.type === 'image'"
+    class="img-wrap"
+    @contextmenu.prevent="$emit('ctx-menu', $event)"
+    @touchstart="$emit('touch-start', $event)"
+    @touchend="$emit('touch-end')"
+    @touchmove="$emit('touch-end')"
+    @touchcancel="$emit('touch-end')"
+  >
     <div v-if="!imgLoaded" class="img-skeleton" :style="imgSkeletonStyle"></div>
     <img
       :src="thumbSrc"
@@ -17,7 +40,16 @@
   </div>
 
   <!-- File message -->
-  <div v-else-if="m.type === 'file'" class="file-card" @click="download">
+  <div
+    v-else-if="m.type === 'file'"
+    class="file-card"
+    @click="download"
+    @contextmenu.prevent="$emit('ctx-menu', $event)"
+    @touchstart="$emit('touch-start', $event)"
+    @touchend="$emit('touch-end')"
+    @touchmove="$emit('touch-end')"
+    @touchcancel="$emit('touch-end')"
+  >
     <div class="file-icon">{{ ext }}</div>
     <div class="file-meta">
       <div class="file-name">{{ content.filename || 'file' }}</div>
@@ -41,7 +73,7 @@ import { api, fmtBytes, extOf } from '@/api/index.js'
 const props = defineProps({
   m: { type: Object, required: true }
 })
-defineEmits(['view-image'])
+defineEmits(['view-image', 'ctx-menu', 'touch-start', 'touch-end'])
 
 // Parse content — may be JSON string or already an object
 const content = computed(() => {

@@ -201,7 +201,13 @@
               <!-- Peer message -->
               <div v-if="!isSelf(m)" class="peer-msg-wrap">
                 <div v-if="!isCompact(m, i)" class="peer-name-label">nodex</div>
-                <MsgBody :m="m" @view-image="viewerSrc = $event" />
+                <MsgBody
+                  :m="m"
+                  @view-image="viewerSrc = $event"
+                  @ctx-menu="onCtx($event, m)"
+                  @touch-start="onTouchStart($event, m)"
+                  @touch-end="onTouchEnd"
+                />
                 <template v-if="msgFiller(m)">
                   <div class="filler-sep"></div>
                   <div class="filler-body">{{ msgFiller(m) }}</div>
@@ -218,7 +224,13 @@
               <!-- Self message -->
               <div v-else class="bubble-self-wrap">
                 <div class="bubble-wrap">
-                  <MsgBody :m="m" @view-image="viewerSrc = $event" />
+                  <MsgBody
+                    :m="m"
+                    @view-image="viewerSrc = $event"
+                    @ctx-menu="onCtx($event, m)"
+                    @touch-start="onTouchStart($event, m)"
+                    @touch-end="onTouchEnd"
+                  />
                   <div class="msg-meta">
                     <span
                       class="msg-state"
@@ -232,21 +244,11 @@
                     >{{ expandedTimeId === (m.id || m.tempId) ? fmtDatetime(m.createdAt) : fmtTime(m.createdAt) }}</span>
                   </div>
                 </div>
-                <!-- 撤回按钮：仅已入库的消息可撤回 -->
-                <div v-if="m.id" class="bubble-actions">
-                  <button @click.stop="recallConfirmId = m.id" title="撤回消息">
-                    <!-- rotate-ccw icon -->
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
-                    </svg>
-                  </button>
-                </div>
               </div>
             </div>
           </template>
 
         </div>
-        <div class="fade-bottom"></div>
       </div>
 
       <!-- Empty state -->
@@ -266,6 +268,18 @@
 
       <!-- Input composer -->
       <div v-if="chatStore.activePeerId" class="input-wrap">
+        <!-- 引用预览条 -->
+        <div v-if="replyingTo" class="reply-preview-bar">
+          <div class="rp-text">
+            <span class="rp-from">引用 {{ replyFromName }}：</span>
+            <span class="rp-preview">{{ replyingTo.preview }}</span>
+          </div>
+          <button class="rp-close" @click="cancelReply" title="取消引用">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
         <!-- 表情选择器 -->
         <div v-if="showEmojiPicker" ref="emojiWrapRef" class="emoji-picker-mount">
           <EmojiPicker @pick="insertEmoji" />
@@ -390,6 +404,19 @@
             role="switch"
           ></button>
         </div>
+        <div class="setting-row">
+          <div class="setting-text">
+            <div class="setting-label">显示 AI 文案</div>
+            <div class="setting-desc">在对方消息下方附加伪装文案</div>
+          </div>
+          <button
+            class="toggle-btn"
+            :class="{ 'toggle-on': settingsShowFiller }"
+            @click="settingsShowFiller = !settingsShowFiller"
+            :aria-checked="settingsShowFiller"
+            role="switch"
+          ></button>
+        </div>
         <div class="actions">
           <button class="btn btn-ghost" @click="showSettings = false">取消</button>
           <button class="btn btn-primary" :disabled="settingsSaving" @click="saveSettings">
@@ -413,6 +440,36 @@
 
     <!-- ═══ Files modal ═══ -->
     <FilesModal v-if="showFiles" @close="showFiles = false" />
+
+    <!-- ═══ Message context menu (右键/长按) ═══ -->
+    <div
+      v-if="ctxMenu"
+      class="ctx-menu"
+      :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }"
+      @click.stop
+      @contextmenu.prevent
+    >
+      <button v-if="ctxMenu.canCopy" class="ctx-menu-item" @click="ctxDoCopy">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="12" height="12" rx="2"/>
+          <path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+        </svg>
+        <span>复制</span>
+      </button>
+      <button v-if="ctxMenu.canReply" class="ctx-menu-item" @click="ctxDoReply">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 17 4 12 9 7"/>
+          <path d="M20 18v-2a4 4 0 0 0-4-4H4"/>
+        </svg>
+        <span>引用</span>
+      </button>
+      <button v-if="ctxMenu.canRecall" class="ctx-menu-item danger" @click="ctxDoRecall">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
+        </svg>
+        <span>撤回</span>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -471,6 +528,7 @@ const showFiles    = ref(false)
 const showSettings = ref(false)
 const settingsBlink  = ref(true)
 const settingsUnread = ref(true)
+const settingsShowFiller = ref(true)
 const settingsSaving = ref(false)
 const recallConfirmId = ref(null)  // 等待二次确认的消息 id
 const showEmojiPicker = ref(false)
@@ -485,10 +543,106 @@ const hasMore         = ref(false)
 const sleepMode       = ref(false)
 let sleepTimer        = null
 const expandedTimeId  = ref(null)
+const replyingTo      = ref(null)  // { id, fromUserId, type, preview, recalled }
+const ctxMenu         = ref(null)  // { msg, x, y, canCopy, canReply, canRecall }
+const RECALL_WINDOW_MS = 2 * 60 * 1000
+let longPressTimer    = null
 
 function toggleTime(id) {
   expandedTimeId.value = expandedTimeId.value === id ? null : id
 }
+
+function startReply(m) {
+  if (!m || !m.id || m.recalled) return
+  let preview = ''
+  if (m.type === 'text') {
+    const raw = typeof m.content === 'string' ? m.content : (m.content?.text || '')
+    preview = raw.slice(0, 80)
+  } else if (m.type === 'image') {
+    preview = '[图片]'
+  } else if (m.type === 'file') {
+    const c = typeof m.content === 'string' ? {} : (m.content || {})
+    preview = c.filename ? `[文件] ${c.filename}` : '[文件]'
+  }
+  replyingTo.value = {
+    id: m.id,
+    fromUserId: m.fromUserId,
+    type: m.type,
+    preview,
+    recalled: false
+  }
+  nextTick(() => taRef.value?.focus())
+}
+
+function cancelReply() {
+  replyingTo.value = null
+}
+
+// ── 右键 / 长按 消息菜单 ─────────────────────────────────────────
+function showCtxMenuAt(m, x, y) {
+  if (!m || !m.id || m.recalled) return
+  const isSelfMsg = m.fromUserId === chatStore.selfUserId()
+  const inRecallWindow = Date.now() - (m.createdAt || 0) < RECALL_WINDOW_MS
+  const W = 160, H = 140
+  if (x + W > window.innerWidth) x = Math.max(8, window.innerWidth - W - 8)
+  if (y + H > window.innerHeight) y = Math.max(8, window.innerHeight - H - 8)
+  ctxMenu.value = {
+    msg: m,
+    x, y,
+    canCopy: m.type === 'text',
+    canReply: true,
+    canRecall: isSelfMsg && inRecallWindow
+  }
+}
+
+function onCtx(e, m) {
+  showCtxMenuAt(m, e.clientX, e.clientY)
+}
+
+function onTouchStart(e, m) {
+  if (longPressTimer) clearTimeout(longPressTimer)
+  const t = e.touches?.[0]
+  if (!t) return
+  const x = t.clientX, y = t.clientY
+  longPressTimer = setTimeout(() => {
+    longPressTimer = null
+    showCtxMenuAt(m, x, y)
+  }, 500)
+}
+
+function onTouchEnd() {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null }
+}
+
+function closeCtxMenu() {
+  ctxMenu.value = null
+}
+
+function ctxDoCopy() {
+  const m = ctxMenu.value?.msg
+  closeCtxMenu()
+  if (!m) return
+  const text = typeof m.content === 'string' ? m.content : (m.content?.text || '')
+  if (text) navigator.clipboard?.writeText(text).catch(() => {})
+}
+
+function ctxDoReply() {
+  const m = ctxMenu.value?.msg
+  closeCtxMenu()
+  if (m) startReply(m)
+}
+
+function ctxDoRecall() {
+  const m = ctxMenu.value?.msg
+  closeCtxMenu()
+  if (m?.id) recallConfirmId.value = m.id
+}
+
+const replyFromName = computed(() => {
+  if (!replyingTo.value) return ''
+  if (replyingTo.value.fromUserId === chatStore.selfUserId()) return '我'
+  return currentPeer.value?.name || 'nodex'
+})
 const newChatId    = ref('')
 const newChatError = ref('')
 const newChatLoading = ref(false)
@@ -542,6 +696,7 @@ function isSelf(m) { return m.fromUserId === chatStore.selfUserId() }
 
 // 确定性取 filler：同一条消息每次刷新显示同一段文字
 function msgFiller(m) {
+  if (auth.user?.showFiller === 0) return null
   if (!fillers.value.length || !m.id || isSelf(m)) return null
   return fillers.value[m.id % fillers.value.length]?.content ?? null
 }
@@ -644,8 +799,9 @@ watch(() => chatStore.totalUnread, (n) => {
 // ── Send ──────────────────────────────────────────────────────────────
 function send() {
   if (!draft.value.trim() || !chatStore.activePeerId) return
-  chatStore.sendText(chatStore.activePeerId, draft.value.trim())
+  chatStore.sendText(chatStore.activePeerId, draft.value.trim(), replyingTo.value)
   draft.value = ''
+  replyingTo.value = null
   if (taRef.value) taRef.value.style.height = 'auto'
 }
 
@@ -664,9 +820,11 @@ async function onFileSelect(e) {
   const file = e.target.files[0]
   if (!file || !chatStore.activePeerId) return
   if (fileInputRef.value) fileInputRef.value.value = ''
+  const r = replyingTo.value
+  replyingTo.value = null
   try {
-    if (file.type.startsWith('image/')) await chatStore.sendImage(chatStore.activePeerId, file)
-    else                                await chatStore.sendFile(chatStore.activePeerId, file)
+    if (file.type.startsWith('image/')) await chatStore.sendImage(chatStore.activePeerId, file, r)
+    else                                await chatStore.sendFile(chatStore.activePeerId, file, r)
     nextTick(scrollToBottom)
   } catch (err) {
     console.error('Upload failed', err)
@@ -682,8 +840,10 @@ async function onPaste(e) {
   e.preventDefault()
   const file = imageItem.getAsFile()
   if (!file) return
+  const r = replyingTo.value
+  replyingTo.value = null
   try {
-    await chatStore.sendImage(chatStore.activePeerId, file)
+    await chatStore.sendImage(chatStore.activePeerId, file, r)
     nextTick(scrollToBottom)
   } catch (err) {
     console.error('Paste image failed', err)
@@ -786,17 +946,19 @@ function onVisibilityChange() {
 
 // ── Settings ──────────────────────────────────────────────────────────
 function openSettings() {
-  settingsBlink.value  = auth.user?.notifyBlink  !== 0
-  settingsUnread.value = auth.user?.notifyUnread !== 0
-  showSettings.value   = true
+  settingsBlink.value      = auth.user?.notifyBlink  !== 0
+  settingsUnread.value     = auth.user?.notifyUnread !== 0
+  settingsShowFiller.value = auth.user?.showFiller   !== 0
+  showSettings.value       = true
 }
 
 async function saveSettings() {
   settingsSaving.value = true
   try {
     await auth.updateSettings({
-      notifyBlink:  settingsBlink.value  ? 1 : 0,
-      notifyUnread: settingsUnread.value ? 1 : 0
+      notifyBlink:  settingsBlink.value      ? 1 : 0,
+      notifyUnread: settingsUnread.value     ? 1 : 0,
+      showFiller:   settingsShowFiller.value ? 1 : 0
     })
     showSettings.value = false
     // 立即更新标题
@@ -838,6 +1000,7 @@ function onDocClick(e) {
   if (emojiWrapRef.value && !emojiWrapRef.value.contains(e.target)) {
     showEmojiPicker.value = false
   }
+  if (ctxMenu.value) closeCtxMenu()
 }
 
 function onKeyEsc(e) {
@@ -848,6 +1011,8 @@ function onKeyEsc(e) {
     showEmojiPicker.value  = false
     viewerSrc.value        = null
     showSettings.value     = false
+    replyingTo.value       = null
+    ctxMenu.value          = null
   }
 }
 

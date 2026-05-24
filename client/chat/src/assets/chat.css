@@ -245,12 +245,12 @@
   max-width: min(75%, 480px);
   background: var(--bubble-other);
   color: var(--bubble-other-text);
-  padding: 10px 16px;
+  padding: 6px 14px;
   border-radius: 4px 18px 18px 18px;
 }
 .msg-row.self .msg-body {
   background: var(--bubble-self); color: var(--bubble-self-text);
-  padding: 10px 16px; border-radius: 18px 4px 18px 18px;
+  padding: 6px 14px; border-radius: 18px 4px 18px 18px;
   max-width: 100%;
 }
 .msg-meta {
@@ -277,20 +277,6 @@
 }
 .peer-name-label { font-size: 12px; color: var(--text-2); margin-bottom: 4px; font-weight: 500; }
 .msg-row.compact .peer-name-label { display: none; }
-.bubble-actions {
-  opacity: 0; transition: opacity 180ms ease;
-  display: inline-flex; gap: 4px; margin-left: 8px;
-  align-self: center;
-  position: relative;
-}
-.msg-row:hover .bubble-actions { opacity: 1; }
-.bubble-actions button {
-  width: 26px; height: 26px; border-radius: 6px;
-  border: 1px solid var(--border); background: var(--bg);
-  color: var(--text-2); cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
-}
-.bubble-actions button:hover { background: var(--bg-2); color: var(--text); }
 .recalled {
   text-align: center; font-size: 12px; color: var(--text-3);
   font-style: italic; padding: 8px;
@@ -581,6 +567,98 @@
   line-height: 1.65;
   word-break: break-word;
   white-space: pre-wrap;
+}
+
+/* Reply quote — 嵌入主消息上方的引用块（ChatGPT 风格 context quote）*/
+.reply-quote {
+  max-width: min(75%, 480px);
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  background: var(--bg-2);
+  border-left: 2px solid var(--accent);
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-2);
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.reply-quote.reply-recalled {
+  font-style: italic;
+  color: var(--text-3);
+}
+.msg-row.self .reply-quote {
+  max-width: 100%;
+  background: var(--bg-3, var(--bg-2));
+}
+
+/* Reply preview bar — 输入框上方 */
+.reply-preview-bar {
+  max-width: 768px;
+  margin: 0 auto 8px;
+  padding: 8px 12px;
+  background: var(--bg-2);
+  border-left: 2px solid var(--accent);
+  border-radius: 6px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.reply-preview-bar .rp-text {
+  flex: 1; min-width: 0;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.reply-preview-bar .rp-from { color: var(--text); font-weight: 500; margin-right: 4px; }
+.reply-preview-bar .rp-preview { color: var(--text-2); }
+.reply-preview-bar .rp-close {
+  width: 22px; height: 22px;
+  border: none; border-radius: 4px;
+  background: transparent; color: var(--text-3);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.reply-preview-bar .rp-close:hover { background: var(--bg-3); color: var(--text); }
+
+/* Message context menu — 右键 / 长按弹出 */
+.ctx-menu {
+  position: fixed;
+  z-index: 80;
+  min-width: 140px;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column;
+  user-select: none;
+}
+.ctx-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 120ms ease;
+}
+.ctx-menu-item:hover { background: var(--bg-2); }
+.ctx-menu-item.danger { color: var(--danger); }
+.ctx-menu-item.danger:hover { background: var(--bg-2); }
+.ctx-menu-item svg { flex-shrink: 0; opacity: 0.8; }
+
+/* 移动端禁用长按系统菜单（iOS 上长按文本会弹出复制菜单），由我们自己的菜单接管 */
+@media (max-width: 767px) {
+  .msg-body, .img-wrap, .file-card {
+    -webkit-touch-callout: none;
+  }
 }
 
 /* Scrim */

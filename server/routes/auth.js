@@ -45,7 +45,8 @@ router.post('/login', (req, res) => {
         userId: user.user_id,
         name: user.name,
         notifyBlink: user.notify_blink ?? 1,
-        notifyUnread: user.notify_unread ?? 1
+        notifyUnread: user.notify_unread ?? 1,
+        showFiller: user.show_filler ?? 1
       }
     }
   });
@@ -76,19 +77,21 @@ router.get('/me', requireUser, (req, res) => {
       userId: u.user_id,
       name: u.name,
       notifyBlink: u.notify_blink ?? 1,
-      notifyUnread: u.notify_unread ?? 1
+      notifyUnread: u.notify_unread ?? 1,
+      showFiller: u.show_filler ?? 1
     }
   });
 });
 
-// PATCH /api/auth/settings  body: { notifyBlink?, notifyUnread? }
+// PATCH /api/auth/settings  body: { notifyBlink?, notifyUnread?, showFiller? }
 router.patch('/settings', requireUser, (req, res) => {
-  const { notifyBlink, notifyUnread } = req.body || {};
+  const { notifyBlink, notifyUnread, showFiller } = req.body || {};
   userService.updateMySettings(req.auth.userId, {
     notifyBlink: notifyBlink === 0 || notifyBlink === 1 ? notifyBlink : undefined,
-    notifyUnread: notifyUnread === 0 || notifyUnread === 1 ? notifyUnread : undefined
+    notifyUnread: notifyUnread === 0 || notifyUnread === 1 ? notifyUnread : undefined,
+    showFiller: showFiller === 0 || showFiller === 1 ? showFiller : undefined
   });
-  res.json({ ok: true, data: { notifyBlink, notifyUnread } });
+  res.json({ ok: true, data: { notifyBlink, notifyUnread, showFiller } });
 });
 
 module.exports = router;
