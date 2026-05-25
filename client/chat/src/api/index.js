@@ -91,6 +91,31 @@ export const api = {
   createFiller: (content) => req('POST',   '/api/admin/fillers',      { body: { content }, isAdmin: true }),
   deleteFiller: (id)      => req('DELETE', `/api/admin/fillers/${id}`, { isAdmin: true }),
 
+  // Stickers
+  stickers:      ()       => req('GET',    '/api/stickers'),
+  adminStickers: ()       => req('GET',    '/api/admin/stickers',      { isAdmin: true }),
+  uploadSticker: async (file) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    const t = getToken(true) // admin token
+    const res = await fetch(`${BASE}/api/admin/stickers`, {
+      method: 'POST',
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
+      body: fd
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!data.ok) {
+      const err = new Error(data.error?.message || 'Upload failed')
+      err.code = data.error?.code
+      throw err
+    }
+    return data.data
+  },
+  deleteSticker: (fileId) => req('DELETE', `/api/admin/stickers/${fileId}`, { isAdmin: true }),
+  // 管理后台专用缩略图（使用 admin token）
+  adminStickerThumb: (fileId) => `${BASE}/api/admin/stickers/${fileId}/thumbnail?token=${getToken(true)}`,
+  adminStickerImg:   (fileId) => `${BASE}/api/admin/stickers/${fileId}/image?token=${getToken(true)}`,
+
   // Share
   share: ({ before, limit, q } = {}) => {
     const qs = new URLSearchParams()

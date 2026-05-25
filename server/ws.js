@@ -161,8 +161,8 @@ function handleSend(ws, msg) {
   const { clientMsgId, to, msgType, content, replyToId } = msg;
   if (!to || typeof to !== 'string') return sendError(ws, 'invalid_to', 'to is required', { clientMsgId });
   if (to === ws.userId) return sendError(ws, 'invalid_to', 'cannot send to self', { clientMsgId });
-  if (!['text', 'image', 'file'].includes(msgType)) {
-    return sendError(ws, 'invalid_type', 'msgType must be text/image/file', { clientMsgId });
+  if (!['text', 'image', 'file', 'sticker'].includes(msgType)) {
+    return sendError(ws, 'invalid_type', 'msgType must be text/image/file/sticker', { clientMsgId });
   }
 
   const db = getDb();
@@ -178,6 +178,19 @@ function handleSend(ws, msg) {
     if (content.length > 8000) {
       return sendError(ws, 'content_too_long', 'content too long', { clientMsgId });
     }
+  } else if (msgType === 'sticker') {
+    // 贴纸：只需校验 fileId 存在且 scope='sticker'，不限制 owner（全局共享库）
+    if (!content || typeof content !== 'object' || !content.fileId) {
+      return sendError(ws, 'invalid_content', 'content.fileId required', { clientMsgId });
+    }
+    const fileService = require('./services/fileService');
+    const file = fileService.findByFileId(content.fileId);
+    if (!file) return sendError(ws, 'file_not_found', 'Sticker not found', { clientMsgId });
+    if (file.scope !== 'sticker') return sendError(ws, 'invalid_file_scope', 'File is not a sticker', { clientMsgId });
+    // 规范 content
+    content.fileId = file.file_id;
+    if (file.width) content.width = file.width;
+    if (file.height) content.height = file.height;
   } else {
     if (!content || typeof content !== 'object' || !content.fileId) {
       return sendError(ws, 'invalid_content', 'content.fileId required', { clientMsgId });
@@ -305,6 +318,8 @@ async function pushBark(saved, fromUserId) {
     body = text.length > 80 ? text.slice(0, 80) + '…' : text;
   } else if (saved.type === 'image') {
     body = '[图片]';
+  } else if (saved.type === 'sticker') {
+    body = '[表情包]';
   } else {
     const filename = saved.content?.filename || '文件';
     body = `[文件] ${filename}`;

@@ -11,7 +11,8 @@ const routes = [
       { path: 'users',   component: () => import('./pages/admin/UsersPage.vue') },
       { path: 'cleanup', component: () => import('./pages/admin/CleanupPage.vue') },
       { path: 'config',   component: () => import('./pages/admin/ConfigPage.vue') },
-      { path: 'fillers',  component: () => import('./pages/admin/FillersPage.vue') },
+      { path: 'fillers',   component: () => import('./pages/admin/FillersPage.vue') },
+      { path: 'stickers',  component: () => import('./pages/admin/StickersPage.vue') },
     ]
   },
   { path: '/',              component: () => import('./pages/ChatPage.vue') },

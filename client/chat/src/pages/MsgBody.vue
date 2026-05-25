@@ -62,6 +62,25 @@
     </button>
   </div>
 
+  <!-- Sticker message -->
+  <div
+    v-else-if="m.type === 'sticker'"
+    class="sticker-msg"
+    @click="$emit('view-image', fullSrc)"
+    @contextmenu.prevent="$emit('ctx-menu', $event)"
+    @touchstart="$emit('touch-start', $event)"
+    @touchend="$emit('touch-end')"
+    @touchmove="$emit('touch-end')"
+    @touchcancel="$emit('touch-end')"
+  >
+    <img
+      :src="stickerSrc"
+      :style="stickerStyle"
+      loading="lazy"
+      @error="onStickerError"
+    />
+  </div>
+
   <!-- Fallback -->
   <div v-else class="msg-body" style="color:var(--text-3);font-style:italic">[unsupported message]</div>
 </template>
@@ -130,5 +149,28 @@ function onImgError(e) {
 
 function download() {
   if (fullSrc.value) window.open(fullSrc.value, '_blank')
+}
+
+// Sticker — 直接用原图，缩略图是 JPEG 静态图，GIF 动画会失效
+const stickerSrc = ref('')
+if (props.m.type === 'sticker' && content.value.fileId) {
+  stickerSrc.value = api.fileUrl(content.value.fileId)
+}
+
+const stickerStyle = computed(() => {
+  if (props.m.type !== 'sticker') return {}
+  const w = content.value.width || 120
+  const h = content.value.height || 120
+  const scale = Math.min(1, 160 / Math.max(w, h, 1))
+  return {
+    width:  Math.round(w * scale) + 'px',
+    height: Math.round(h * scale) + 'px',
+    display: 'block'
+  }
+})
+
+function onStickerError(e) {
+  const src = content.value.fileId ? api.fileUrl(content.value.fileId) : ''
+  if (src && e.target.src !== src) e.target.src = src
 }
 </script>

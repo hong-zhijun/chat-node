@@ -569,6 +569,63 @@
   white-space: pre-wrap;
 }
 
+/* Sticker panel */
+.sticker-panel-mount {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 30;
+  margin-bottom: 6px;
+}
+.sticker-panel {
+  width: 320px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 8px;
+}
+.sticker-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+.sticker-item {
+  aspect-ratio: 1;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms;
+}
+.sticker-item:hover { background: var(--bg-2); }
+.sticker-item img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Sticker message（无气泡框，直接显示图片） */
+.sticker-msg {
+  cursor: pointer;
+  display: inline-block;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: opacity 120ms;
+  line-height: 0;
+}
+.sticker-msg:hover { opacity: 0.85; }
+.sticker-msg img { display: block; }
+
 /* Reply quote — 嵌入主消息上方的引用块（ChatGPT 风格 context quote）*/
 .reply-quote {
   max-width: min(75%, 480px);
@@ -754,4 +811,8 @@
   /* Filler — 移动端同步调宽 */
   .filler-sep  { width: 88%; }
   .filler-body { max-width: 88%; }
+
+  /* Sticker panel — 移动端全宽 */
+  .sticker-panel { width: calc(100vw - 24px); }
+  .sticker-grid  { grid-template-columns: repeat(4, 1fr); }
 }

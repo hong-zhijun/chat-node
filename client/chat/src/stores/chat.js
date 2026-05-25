@@ -131,6 +131,7 @@ export const useChatStore = defineStore('chat', () => {
     if (m.type === 'text') preview = typeof m.content === 'string' ? m.content : ''
     else if (m.type === 'image') preview = '[图片]'
     else if (m.type === 'file') preview = '[文件]'
+    else if (m.type === 'sticker') preview = '[表情包]'
     if (m.recalled) preview = '[已撤回]'
     conv.preview = preview.slice(0, 80)
     conv.lastMessageAt = m.createdAt || Date.now()
@@ -205,6 +206,27 @@ export const useChatStore = defineStore('chat', () => {
     wsStore.send(payload)
   }
 
+  function sendSticker(peerId, sticker, replyTo = null) {
+    const clientMsgId = uuidv4()
+    const tempId = 'tmp-' + clientMsgId
+    const self = selfUserId()
+    const content = { fileId: sticker.file_id, width: sticker.width, height: sticker.height }
+    const tempMsg = {
+      tempId, clientMsgId,
+      fromUserId: self, toUserId: peerId,
+      type: 'sticker', content,
+      createdAt: Date.now(), state: 'sending',
+      replyTo: replyTo || null
+    }
+    if (!messages[peerId]) messages[peerId] = []
+    messages[peerId].push(tempMsg)
+    pendingMsgs[clientMsgId] = { peerId, type: 'sticker', content, tempId, replyToId: replyTo?.id || null }
+    const payload = { type: 'send', clientMsgId, to: peerId, msgType: 'sticker', content }
+    if (replyTo?.id) payload.replyToId = replyTo.id
+    wsStore.send(payload)
+    _updateConvPreview(peerId, tempMsg)
+  }
+
   async function sendFile(peerId, file, replyTo = null) {
     const uploaded = await api.uploadFile(file, 'chat')
     const clientMsgId = uuidv4()
@@ -257,7 +279,7 @@ export const useChatStore = defineStore('chat', () => {
 
   return {
     conversations, messages, activePeerId, totalUnread,
-    loadConversations, loadMessages, sendText, sendImage, sendFile,
+    loadConversations, loadMessages, sendText, sendImage, sendFile, sendSticker,
     recallMessage, markRead, setActive, hideConversation, selfUserId
   }
 })

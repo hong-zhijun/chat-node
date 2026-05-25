@@ -14,6 +14,7 @@ function isImage(mime) {
 function rootDirFor(scope) {
   if (scope === 'chat') return path.resolve(config.upload.chatDir);
   if (scope === 'share') return path.resolve(config.upload.shareDir);
+  if (scope === 'sticker') return path.resolve(config.upload.chatDir); // 复用 chatDir
   throw new Error('invalid scope');
 }
 
@@ -36,7 +37,7 @@ function thumbPath(absoluteOriginalPath) {
 }
 
 async function saveUpload({ ownerUserId, scope, originalName, mime, tmpPath, size }) {
-  if (!['chat', 'share'].includes(scope)) {
+  if (!['chat', 'share', 'sticker'].includes(scope)) {
     const e = new Error('invalid scope'); e.status = 400; e.code = 'invalid_scope'; throw e;
   }
   const fileId = generateFileId();
@@ -100,7 +101,7 @@ function findByFileId(fileId) {
 // 当前用户能否访问该文件
 function canAccess(file, userId) {
   if (!file) return false;
-  if (file.scope === 'share') return true; // 所有登录用户
+  if (file.scope === 'share' || file.scope === 'sticker') return true; // 所有登录用户
   if (file.scope === 'chat') {
     if (file.owner_user_id === userId) return true;
     // 是否作为某条消息的发送方/接收方涉及该 file_id

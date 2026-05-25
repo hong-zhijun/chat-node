@@ -15,6 +15,7 @@ const fileRoutes         = require('./routes/files');
 const shareRoutes        = require('./routes/share');
 const adminRoutes        = require('./routes/admin');
 const fillerRoutes       = require('./routes/fillers');
+const stickerRoutes      = require('./routes/stickers');
 
 function ensureDirs() {
   const dirs = [
@@ -40,6 +41,7 @@ function createApp() {
   app.use('/api/files',         fileRoutes);
   app.use('/api/share',         shareRoutes);
   app.use('/api/fillers',       fillerRoutes);
+  app.use('/api/stickers',      stickerRoutes);
 
   app.get('/api/health', (req, res) => {
     res.json({ ok: true, data: { uptime: process.uptime() } });

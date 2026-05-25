@@ -284,6 +284,10 @@
         <div v-if="showEmojiPicker" ref="emojiWrapRef" class="emoji-picker-mount">
           <EmojiPicker @pick="insertEmoji" />
         </div>
+        <!-- 贴纸面板 -->
+        <div v-if="showStickerPanel" ref="stickerWrapRef" class="sticker-panel-mount">
+          <StickerPanel @pick="pickSticker" />
+        </div>
         <div class="input-inner">
           <button class="attach-btn" @click="fileInputRef?.click()" title="Attach file">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -297,6 +301,16 @@
               <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
               <line x1="9" y1="9" x2="9.01" y2="9"/>
               <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+          </button>
+          <!-- 贴纸按钮 -->
+          <button class="attach-btn" @click.stop="showStickerPanel = !showStickerPanel" title="表情包">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10"/>
+              <path d="M8.5 14s1.5 2 3.5 2 3.5-2 3.5-2"/>
+              <line x1="9" y1="9" x2="9.01" y2="9"/>
+              <line x1="15" y1="9" x2="15.01" y2="9"/>
+              <path d="M17 2l2 2-2 2M21 4H17"/>
             </svg>
           </button>
           <textarea
@@ -507,6 +521,7 @@ import { useWsStore } from '@/stores/ws.js'
 import { api, fmtTime, fmtDatetime } from '@/api/index.js'
 import AppAvatar from '@/components/AppAvatar.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'
+import StickerPanel from '@/components/StickerPanel.vue'
 import MsgBody from './MsgBody.vue'
 import FilesModal from './FilesModal.vue'
 
@@ -531,8 +546,10 @@ const settingsUnread = ref(true)
 const settingsShowFiller = ref(true)
 const settingsSaving = ref(false)
 const recallConfirmId = ref(null)  // 等待二次确认的消息 id
-const showEmojiPicker = ref(false)
-const emojiWrapRef    = ref(null)
+const showEmojiPicker  = ref(false)
+const emojiWrapRef     = ref(null)
+const showStickerPanel = ref(false)
+const stickerWrapRef   = ref(null)
 const draft        = ref('')
 const viewerSrc    = ref(null)
 const scrollEl     = ref(null)
@@ -993,12 +1010,22 @@ function insertEmoji(emoji) {
   nextTick(() => taRef.value?.focus())
 }
 
+function pickSticker(sticker) {
+  showStickerPanel.value = false
+  if (!chatStore.activePeerId) return
+  chatStore.sendSticker(chatStore.activePeerId, sticker, replyingTo.value)
+  replyingTo.value = null
+}
+
 function onDocClick(e) {
   if (peerSelectRef.value && !peerSelectRef.value.contains(e.target)) {
     peerMenuOpen.value = false
   }
   if (emojiWrapRef.value && !emojiWrapRef.value.contains(e.target)) {
     showEmojiPicker.value = false
+  }
+  if (stickerWrapRef.value && !stickerWrapRef.value.contains(e.target)) {
+    showStickerPanel.value = false
   }
   if (ctxMenu.value) closeCtxMenu()
 }
@@ -1009,6 +1036,7 @@ function onKeyEsc(e) {
     peerMenuOpen.value     = false
     recallConfirmId.value  = null
     showEmojiPicker.value  = false
+    showStickerPanel.value = false
     viewerSrc.value        = null
     showSettings.value     = false
     replyingTo.value       = null
