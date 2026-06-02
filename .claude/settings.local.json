@@ -30,7 +30,10 @@
       "Bash(Select-Object -Property Name, PSIsContainer)",
       "Bash(Format-Table -AutoSize)",
       "Bash(dir \"D:\\\\workspace\\\\chat-node\\\\client\\\\chat\\\\src\" /s /b /a:-d)",
-      "Bash(findstr \"\\\\.js$\")"
+      "Bash(findstr \"\\\\.js$\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
