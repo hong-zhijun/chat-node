@@ -280,6 +280,7 @@
             </svg>
           </button>
         </div>
+        <div class="input-inner-wrap">
         <!-- 表情选择器 -->
         <div v-if="showEmojiPicker" ref="emojiWrapRef" class="emoji-picker-mount">
           <EmojiPicker @pick="insertEmoji" />
@@ -295,7 +296,7 @@
             </svg>
           </button>
           <!-- 表情按钮 -->
-          <button class="attach-btn" @click.stop="showEmojiPicker = !showEmojiPicker" title="Emoji">
+          <button class="attach-btn" @click.stop="toggleEmojiPicker" title="Emoji">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
@@ -304,7 +305,7 @@
             </svg>
           </button>
           <!-- 贴纸按钮 -->
-          <button class="attach-btn" @click.stop="showStickerPanel = !showStickerPanel" title="表情包">
+          <button class="attach-btn" @click.stop="toggleStickerPanel" title="表情包">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2a10 10 0 1 0 10 10"/>
               <path d="M8.5 14s1.5 2 3.5 2 3.5-2 3.5-2"/>
@@ -334,6 +335,7 @@
             </svg>
           </button>
         </div>
+        </div><!-- /input-inner-wrap -->
         <div class="input-hint">Enter to send · Shift+Enter for new line</div>
         <input ref="fileInputRef" type="file" style="display:none" @change="onFileSelect" />
       </div>
@@ -1004,6 +1006,16 @@ async function logout() {
 }
 
 // Close dropdowns / menus on outside click
+function toggleEmojiPicker() {
+  showEmojiPicker.value = !showEmojiPicker.value
+  if (showEmojiPicker.value) showStickerPanel.value = false
+}
+
+function toggleStickerPanel() {
+  showStickerPanel.value = !showStickerPanel.value
+  if (showStickerPanel.value) showEmojiPicker.value = false
+}
+
 function insertEmoji(emoji) {
   draft.value += emoji
   showEmojiPicker.value = false
@@ -1032,6 +1044,12 @@ function onDocClick(e) {
 
 function onKeyEsc(e) {
   if (e.key === 'Escape') {
+    if (sleepMode.value) { exitSleep(); return }
+    const hadOpen = drawerOpen.value || peerMenuOpen.value || !!recallConfirmId.value ||
+                    showEmojiPicker.value || showStickerPanel.value || !!viewerSrc.value ||
+                    showSettings.value || !!replyingTo.value || !!ctxMenu.value ||
+                    showNewChat.value || showFiles.value
+
     drawerOpen.value       = false
     peerMenuOpen.value     = false
     recallConfirmId.value  = null
@@ -1041,6 +1059,8 @@ function onKeyEsc(e) {
     showSettings.value     = false
     replyingTo.value       = null
     ctxMenu.value          = null
+
+    if (!hadOpen) enterSleep()
   }
 }
 

@@ -4,6 +4,7 @@
   grid-template-columns: 260px 1fr;
   height: 100vh; height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* Sidebar */
@@ -346,15 +347,29 @@
   position: relative;
   padding: 8px 16px 16px;
 }
-/* 表情选择器悬浮在输入框上方 */
+/* 居中对齐包装层，用于弹窗定位（emoji/sticker 相对此容器定位） */
+.input-inner-wrap {
+  position: relative;
+  max-width: 768px;
+  margin: 0 auto;
+}
+/* 表情选择器：从按钮上方弹出，对齐到输入框左侧 */
 .emoji-picker-mount {
   position: absolute;
-  bottom: calc(100% + 4px);
-  left: 16px;
+  bottom: calc(100% + 6px);
+  left: 0;
   z-index: 50;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
+}
+/* 贴纸面板：从按钮上方弹出，对齐到输入框左侧 */
+.sticker-panel-mount {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  margin-bottom: 0;
 }
 .input-wrap::before {
   content: '';
@@ -363,7 +378,6 @@
   background: linear-gradient(to bottom, transparent, var(--bg));
 }
 .input-inner {
-  max-width: 768px; margin: 0 auto;
   background: var(--bg);
   border: 1px solid var(--border-strong);
   border-radius: 24px;
@@ -570,13 +584,6 @@
 }
 
 /* Sticker panel */
-.sticker-panel-mount {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  z-index: 30;
-  margin-bottom: 6px;
-}
 .sticker-panel {
   width: 320px;
   max-height: 240px;
@@ -795,8 +802,10 @@
   .input-wrap { padding: 8px 10px max(12px, env(safe-area-inset-bottom)); }
   .input-hint { display: none; }
 
-  /* Emoji picker — prevent overflow on narrow screens */
+  /* Emoji/sticker pickers — prevent overflow on narrow screens */
   .emoji-picker-mount { max-width: calc(100vw - 20px); overflow: hidden; }
+  .sticker-panel-mount { max-width: calc(100vw - 20px); }
+  .sticker-panel { width: calc(100vw - 24px); }
 
   /* File card — fluid width */
   .file-card { width: auto; max-width: 260px; }
@@ -812,7 +821,6 @@
   .filler-sep  { width: 88%; }
   .filler-body { max-width: 88%; }
 
-  /* Sticker panel — 移动端全宽 */
-  .sticker-panel { width: calc(100vw - 24px); }
+  /* Sticker grid — 移动端 4 列 */
   .sticker-grid  { grid-template-columns: repeat(4, 1fr); }
 }
