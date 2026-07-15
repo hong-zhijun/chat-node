@@ -567,6 +567,16 @@ const ctxMenu         = ref(null)  // { msg, x, y, canCopy, canReply, canRecall 
 const RECALL_WINDOW_MS = 2 * 60 * 1000
 let longPressTimer    = null
 
+// ── Mobile viewport height fix ────────────────────────────────────────
+// iOS Safari 的 100vh 不准确，用 visualViewport.height 设置 --app-h
+function updateAppHeight() {
+  const h = window.visualViewport
+    ? window.visualViewport.height
+    : window.innerHeight
+  document.documentElement.style.setProperty('--app-h', h + 'px')
+}
+let vpCleanup = null
+
 function toggleTime(id) {
   expandedTimeId.value = expandedTimeId.value === id ? null : id
 }
@@ -1069,6 +1079,16 @@ onMounted(async () => {
   document.addEventListener('click', onDocClick)
   document.addEventListener('keydown', onKeyEsc)
   document.addEventListener('visibilitychange', onVisibilityChange)
+
+  // Mobile viewport height — must run before first render settles
+  updateAppHeight()
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight)
+    vpCleanup = () => window.visualViewport.removeEventListener('resize', updateAppHeight)
+  } else {
+    window.addEventListener('resize', updateAppHeight)
+    vpCleanup = () => window.removeEventListener('resize', updateAppHeight)
+  }
   // 拉取 filler 文案列表
   api.fillers().then(data => { fillers.value = data }).catch(() => {})
 
@@ -1094,5 +1114,7 @@ onUnmounted(() => {
   clearTimeout(sleepTimer)
   _stopBlink()
   document.title = 'Nodex'
+  if (vpCleanup) vpCleanup()
+  document.documentElement.style.removeProperty('--app-h')
 })
 </script>

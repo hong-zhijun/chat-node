@@ -60,7 +60,7 @@ html, body {
   transition: background 240ms ease, color 240ms ease;
 }
 
-body { min-height: 100vh; }
+body { min-height: 100vh; min-height: 100dvh; }
 
 code, pre, .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

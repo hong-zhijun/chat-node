@@ -36,6 +36,19 @@ html, body {
   -webkit-overflow-scrolling: auto;
 }
 
+/* Mobile: lock document completely — prevents iOS bounce and keyboard-induced layout shift */
+@media (max-width: 767px) {
+  html {
+    touch-action: manipulation;
+  }
+  html, body {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
 /* Toast stack */
 .toast-stack { position: fixed; top: 16px; right: 16px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
 .toast {
