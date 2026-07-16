@@ -116,8 +116,12 @@ function buildFileWhere({ beforeTimestamp, minSizeBytes, scope }) {
     conds.push(`scope IN (${filtered.map(() => '?').join(',')})`);
     params.push(...filtered);
   }
+  if (!conds.length) return { where: '', params };
+
+  // Qiniu-backed shared files are deliberately outside the current cleanup workflow.
+  // Existing cleanup continues to operate only on the local filesystem.
   return {
-    where: conds.length ? 'WHERE ' + conds.join(' AND ') : '',
+    where: "WHERE COALESCE(storage_provider, 'local') = 'local' AND " + conds.join(' AND '),
     params
   };
 }

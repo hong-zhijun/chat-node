@@ -79,6 +79,7 @@ function createTables() {
       size INTEGER NOT NULL,
       mime TEXT NOT NULL,
       path TEXT NOT NULL,
+      storage_provider TEXT NOT NULL DEFAULT 'local',
       scope TEXT NOT NULL,
       width INTEGER,
       height INTEGER,
@@ -131,6 +132,12 @@ function runMigrations() {
   const msgCols = db.pragma('table_info(messages)').map((c) => c.name);
   if (!msgCols.includes('reply_to_id')) {
     db.exec('ALTER TABLE messages ADD COLUMN reply_to_id INTEGER');
+  }
+
+  const fileCols = db.pragma('table_info(files)').map((c) => c.name);
+  if (!fileCols.includes('storage_provider')) {
+    // Existing records use the on-disk path format and therefore remain local.
+    db.exec("ALTER TABLE files ADD COLUMN storage_provider TEXT NOT NULL DEFAULT 'local'");
   }
 }
 

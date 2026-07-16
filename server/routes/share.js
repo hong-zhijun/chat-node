@@ -15,16 +15,15 @@ router.get('/', requireUser, (req, res) => {
 
 // DELETE /api/share/:fileId  —— 上传者或管理员
 router.delete('/:fileId', requireUser, (req, res, next) => {
-  try {
-    fileService.deleteShareFile({
+  fileService.deleteShareFile({
       fileId: req.params.fileId,
       requesterUserId: req.auth.userId,
       isAdmin: false
-    });
+    })
+    .then(() => {
     res.json({ ok: true, data: { deleted: true } });
-  } catch (e) {
-    next(e);
-  }
+    })
+    .catch(next);
 });
 
 module.exports = router;

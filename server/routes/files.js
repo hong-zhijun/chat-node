@@ -69,6 +69,10 @@ router.get('/:fileId', requireUser, (req, res) => {
   if (!fileService.canAccess(file, req.auth.userId)) {
     return res.status(403).json({ ok: false, error: { code: 'forbidden', message: 'Access denied' } });
   }
+  if (fileService.isQiniuFile(file)) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.redirect(302, fileService.getQiniuDownloadUrl(file, { attachment: true }));
+  }
   const abs = fileService.absPath(file.path);
   if (!fs.existsSync(abs)) {
     return res.status(404).json({ ok: false, error: { code: 'not_found_on_disk', message: 'File missing' } });
@@ -91,6 +95,10 @@ router.get('/:fileId/thumbnail', requireUser, (req, res) => {
   }
   if (!file.has_thumbnail) {
     return res.status(404).json({ ok: false, error: { code: 'no_thumbnail', message: 'No thumbnail' } });
+  }
+  if (fileService.isQiniuFile(file)) {
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    return res.redirect(302, fileService.getQiniuDownloadUrl(file));
   }
   const abs = fileService.thumbPath(fileService.absPath(file.path));
   if (!fs.existsSync(abs)) {

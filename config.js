@@ -25,6 +25,23 @@ module.exports = {
     shareDir: process.env.UPLOAD_SHARE_DIR || './data/uploads/share'
   },
 
+  storage: {
+    // local: all shared files remain on the application disk.
+    // qiniu: newly uploaded shared files are stored in Qiniu Kodo.
+    shareDriver: process.env.SHARE_STORAGE_DRIVER || 'local'
+  },
+
+  qiniu: {
+    accessKey: process.env.QINIU_ACCESS_KEY || '',
+    secretKey: process.env.QINIU_SECRET_KEY || '',
+    bucket: process.env.QINIU_BUCKET || '',
+    // An HTTPS-enabled domain bound to the bucket, without a trailing slash.
+    domain: process.env.QINIU_DOMAIN || '',
+    // Optional. Leave empty to let the SDK discover the bucket region.
+    zone: process.env.QINIU_ZONE || '',
+    downloadExpiresSeconds: parseInt(process.env.QINIU_DOWNLOAD_EXPIRES_SECONDS || '300', 10)
+  },
+
   ws: {
     heartbeatIntervalMs:      parseInt(process.env.WS_HEARTBEAT_INTERVAL_MS || '25000'),
     heartbeatTimeoutMs:       parseInt(process.env.WS_HEARTBEAT_TIMEOUT_MS  || '30000'),

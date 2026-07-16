@@ -105,6 +105,22 @@ npm run dev   # 前后端并行启动，前端热更新
 | `jwtSecret` | `JWT_SECRET` | — | JWT 签名密钥，**必须修改** |
 | `jwtExpiresIn` | `JWT_EXPIRES_IN` | `30d` | 用户 token 有效期 |
 
+### 七牛云 Kodo（仅共享文件，可选）
+
+默认所有文件仍保存在本地。若只想将**之后上传的共享文件**存入七牛 Kodo，请在 `.env` 设置：
+
+```env
+SHARE_STORAGE_DRIVER=qiniu
+QINIU_ACCESS_KEY=your_access_key
+QINIU_SECRET_KEY=your_secret_key
+QINIU_BUCKET=your_private_bucket
+QINIU_DOMAIN=https://files.example.com
+# 可选：z0、z1、z2、na0、as0、cn-east-2；留空则由 SDK 自动识别区域
+QINIU_ZONE=
+```
+
+Bucket 应设为私有。应用会先验证登录状态和文件权限，再重定向到有效期 5 分钟的七牛签名下载链接。既有文件、聊天附件和表情包仍保留在本地；后台文件清理也只处理本地文件。
+
 ## 首次使用
 
 1. 启动服务后访问 `/admin/login`，用 `adminKey` 登录后台
