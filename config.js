@@ -39,7 +39,15 @@ module.exports = {
     domain: process.env.QINIU_DOMAIN || '',
     // Optional. Leave empty to let the SDK discover the bucket region.
     zone: process.env.QINIU_ZONE || '',
-    downloadExpiresSeconds: parseInt(process.env.QINIU_DOWNLOAD_EXPIRES_SECONDS || '300', 10)
+    // Optional. Upload endpoint used by browsers, e.g. https://upload-z2.qiniup.com.
+    // Leave empty to derive it from QINIU_ZONE or the bucket's region.
+    uploadHost: process.env.QINIU_UPLOAD_HOST || '',
+    downloadExpiresSeconds: parseInt(process.env.QINIU_DOWNLOAD_EXPIRES_SECONDS || '300', 10),
+    // Browser-to-Kodo multipart upload of shared files.
+    // Maximum accepted file size in bytes (default 10 GiB).
+    directUploadMaxBytes: parseInt(process.env.QINIU_DIRECT_UPLOAD_MAX_BYTES || String(10 * 1024 * 1024 * 1024), 10),
+    // Lifetime of each upload token; the browser refreshes it during long uploads.
+    directUploadTokenExpiresSeconds: parseInt(process.env.QINIU_DIRECT_UPLOAD_TOKEN_EXPIRES_SECONDS || '7200', 10)
   },
 
   ws: {

@@ -65,9 +65,14 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 9l5-5 5 5M5 20h14"/></svg>
               <span class="name">{{ u.name }}</span>
               <span class="pct">{{ u.pct }}%</span>
+              <button class="icon-btn" style="width:20px;height:20px" title="Cancel upload" @click="cancelUpload(u)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+              </button>
             </div>
             <div class="progress"><div class="progress-bar" :style="{ width: u.pct + '%' }"></div></div>
-            <div style="font-size:11px;color:var(--text-2)">Uploading…</div>
+            <div style="font-size:11px;color:var(--text-2)">
+              {{ u.total ? `${fmtBytes(u.loaded)} / ${fmtBytes(u.total)}` : 'Uploading…' }}
+            </div>
           </div>
 
           <!-- Files -->
@@ -156,8 +161,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, markRaw } from 'vue'
 import { api, fmtBytes, fmtTime, extOf } from '@/api/index.js'
+import { uploadShareFileDirect, DirectUploadUnavailableError } from '@/api/qiniuDirectUpload.js'
 
 const emit = defineEmits(['close'])
 
@@ -240,16 +246,40 @@ async function onDrop(e) {
 async function uploadFiles(fileList) {
   for (const file of fileList) {
     const uploadId = Math.random().toString(36).slice(2)
-    uploads.value.push({ id: uploadId, name: file.name, pct: 0 })
+    const controller = new AbortController()
+    uploads.value.push({ id: uploadId, name: file.name, pct: 0, loaded: 0, total: file.size, controller: markRaw(controller) })
+    const entry = () => uploads.value.find(u => u.id === uploadId)
+    const onProgress = (loaded, total) => {
+      const u = entry()
+      if (!u) return
+      u.loaded = loaded
+      u.total = total
+      u.pct = total ? Math.min(100, Math.floor((loaded / total) * 100)) : 100
+    }
     try {
-      const result = await api.uploadFile(file, 'share')
+      let result
+      try {
+        result = await uploadShareFileDirect(file, { onProgress, signal: controller.signal })
+      } catch (err) {
+        if (!(err instanceof DirectUploadUnavailableError)) throw err
+        // Shared files are stored on the server's disk: use the classic upload.
+        result = await api.uploadFile(file, 'share')
+      }
       files.value.unshift(result)
     } catch (err) {
-      alert(`Failed to upload ${file.name}`)
+      if (err?.name !== 'AbortError') {
+        console.error('Upload failed', err)
+        alert(`Failed to upload ${file.name}: ${err?.message || 'unknown error'}\n` +
+          'Select the same file again to resume from where it stopped.')
+      }
     } finally {
       uploads.value = uploads.value.filter(u => u.id !== uploadId)
     }
   }
+}
+
+function cancelUpload(u) {
+  u.controller?.abort()
 }
 
 function onKeyDown(e) {

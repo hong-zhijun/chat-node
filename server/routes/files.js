@@ -62,6 +62,46 @@ router.post('/upload', requireUser, (req, res, next) => {
   });
 });
 
+// ── Shared files: browser-to-Qiniu direct upload ──────────────────────────
+// POST /api/files/direct-upload/init      { filename, size, mime }
+//   → { ticket, uploadHost, bucket, key, encodedKey, token, tokenExpiresAt, maxBytes }
+//   409 direct_upload_unavailable when shared files are stored locally.
+router.post('/direct-upload/init', requireUser, async (req, res, next) => {
+  try {
+    const { filename, size, mime } = req.body || {};
+    const data = await fileService.initShareDirectUpload({
+      ownerUserId: req.auth.userId, filename, size, mime
+    });
+    res.json({ ok: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// POST /api/files/direct-upload/token     { ticket } → { token, tokenExpiresAt }
+router.post('/direct-upload/token', requireUser, (req, res, next) => {
+  try {
+    const data = fileService.refreshShareDirectUploadToken({
+      ticket: req.body && req.body.ticket, userId: req.auth.userId
+    });
+    res.json({ ok: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
+// POST /api/files/direct-upload/complete  { ticket } → saved file
+router.post('/direct-upload/complete', requireUser, async (req, res, next) => {
+  try {
+    const data = await fileService.completeShareDirectUpload({
+      ticket: req.body && req.body.ticket, userId: req.auth.userId
+    });
+    res.json({ ok: true, data });
+  } catch (e) {
+    next(e);
+  }
+});
+
 // GET /api/files/:fileId
 router.get('/:fileId', requireUser, (req, res) => {
   const file = fileService.findByFileId(req.params.fileId);

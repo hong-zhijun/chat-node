@@ -121,6 +121,25 @@ QINIU_ZONE=
 
 Bucket 应设为私有。应用会先验证登录状态和文件权限，再重定向到有效期 5 分钟的七牛签名下载链接。既有文件、聊天附件和表情包仍保留在本地；后台文件清理也只处理本地文件。
 
+开启七牛后，**共享文件由浏览器分片直传七牛**（分片上传 v2），文件内容不经过本服务和 Nginx，因此不受 `client_max_body_size` 和 200 MB 上传限制约束：
+
+1. 浏览器调用 `POST /api/files/direct-upload/init`，服务端生成对象路径，签发只能写入该路径、带大小上限（`fsizeLimit`）且禁止覆盖的上传凭证；
+2. 浏览器把文件按 8 MB 以上的分片并发上传到七牛，支持进度显示、取消、失败重试和断点续传（重新选择同一个文件即可继续）；凭证快过期时通过 `POST /api/files/direct-upload/token` 续签；
+3. 上传完成后调用 `POST /api/files/direct-upload/complete`，服务端到七牛核对文件存在且大小一致后才写入数据库。
+
+相关配置：
+
+```env
+# 单个共享文件上限（字节），默认 10 GiB
+QINIU_DIRECT_UPLOAD_MAX_BYTES=10737418240
+# 上传凭证有效期（秒），长时间上传会自动续签
+QINIU_DIRECT_UPLOAD_TOKEN_EXPIRES_SECONDS=7200
+# 可选：浏览器使用的上传域名；留空则根据 QINIU_ZONE 或空间所在区域自动获取
+QINIU_UPLOAD_HOST=
+```
+
+直传的图片不在服务端生成缩略图，20 MB 以内的图片使用七牛 `imageView2` 实时生成缩略图。若页面以后添加 CSP，需要在 `connect-src` 中放行七牛上传域名（如 `https://*.qiniup.com`）。聊天附件仍走原来的服务端上传，受 Nginx 和 200 MB 限制。
+
 ## 首次使用
 
 1. 启动服务后访问 `/admin/login`，用 `adminKey` 登录后台

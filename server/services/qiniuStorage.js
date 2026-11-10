@@ -46,6 +46,88 @@ function createUploadToken(mac, bucket) {
   return new qiniu.rs.PutPolicy({ scope: bucket }).uploadToken(mac);
 }
 
+/**
+ * Upload token for one browser-to-Kodo upload. The scope is pinned to a single
+ * object key, existing objects cannot be overwritten, and Kodo rejects files
+ * larger than maxBytes.
+ */
+function createDirectUploadToken({ key, maxBytes, expiresSeconds }) {
+  const { settings, mac } = createClient();
+  const expires = Math.max(60, Number(expiresSeconds) || 7200);
+  const token = new qiniu.rs.PutPolicy({
+    scope: `${settings.bucket}:${key}`,
+    insertOnly: 1,
+    fsizeLimit: maxBytes,
+    expires
+  }).uploadToken(mac);
+  return { token, tokenExpiresAt: Date.now() + expires * 1000 };
+}
+
+function encodeObjectKey(key) {
+  return qiniu.util.urlsafeBase64Encode(key);
+}
+
+function normalizeUploadHost(host) {
+  const trimmed = String(host).trim().replace(/\/+$/, '');
+  if (/^http:\/\//i.test(trimmed)) return trimmed.replace(/^http:/i, 'https:');
+  return /^https:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+let discoveredUploadHost = null;
+
+/** HTTPS upload endpoint the browser should use for this bucket. */
+async function resolveUploadHost() {
+  const settings = getSettings();
+  if (settings.uploadHost) return normalizeUploadHost(settings.uploadHost);
+
+  const zoneName = ZONE_NAMES[settings.zone];
+  if (settings.zone && !zoneName) {
+    throw configurationError(`Unsupported QINIU_ZONE: ${settings.zone}`);
+  }
+  if (zoneName) {
+    const zone = qiniu.zone[zoneName];
+    return normalizeUploadHost(zone.cdnUpHosts[0] || zone.srcUpHosts[0]);
+  }
+
+  if (discoveredUploadHost && discoveredUploadHost.expiresAt > Date.now()) {
+    return discoveredUploadHost.host;
+  }
+  const host = await new Promise((resolve, reject) => {
+    qiniu.zone.getZoneInfo(settings.accessKey, settings.bucket, (err, zoneInfo, ttlSeconds) => {
+      if (err) return reject(err);
+      const candidate = (zoneInfo.cdnUpHosts && zoneInfo.cdnUpHosts[0]) ||
+        (zoneInfo.srcUpHosts && zoneInfo.srcUpHosts[0]);
+      if (!candidate) return reject(new Error('Qiniu region query returned no upload host'));
+      const ttlMs = Math.min(Math.max(Number(ttlSeconds) || 3600, 60), 86400) * 1000;
+      discoveredUploadHost = { host: normalizeUploadHost(candidate), expiresAt: Date.now() + ttlMs };
+      resolve(discoveredUploadHost.host);
+    });
+  });
+  return host;
+}
+
+/** Object metadata ({ fsize, mimeType, hash, ... }), or null when the key does not exist. */
+async function statFile(key) {
+  const { settings, mac, qiniuConfig } = createClient();
+  const bucketManager = new qiniu.rs.BucketManager(mac, qiniuConfig);
+  let result;
+  try {
+    result = await bucketManager.stat(settings.bucket, key);
+  } catch (error) {
+    if (isNotFoundError(error)) return null;
+    throw error;
+  }
+  const status = result && result.resp ? result.resp.statusCode : 0;
+  if (status === 404 || status === 612) return null;
+  if (status !== 200) {
+    const error = new Error(`Qiniu stat failed with HTTP ${status}`);
+    error.status = 502;
+    error.code = 'qiniu_stat_failed';
+    throw error;
+  }
+  return result.data;
+}
+
 async function uploadFile({ key, filePath, mime }) {
   const { settings, mac, qiniuConfig } = createClient();
   const uploader = new qiniu.form_up.FormUploader(qiniuConfig);
@@ -93,5 +175,9 @@ async function deleteFile(key) {
 module.exports = {
   uploadFile,
   getPrivateDownloadUrl,
-  deleteFile
+  deleteFile,
+  createDirectUploadToken,
+  encodeObjectKey,
+  resolveUploadHost,
+  statFile
 };
